@@ -41,6 +41,11 @@ class Rosh():
                 break  # Control-D pressed.
 
             cmd = shlex.split(text)
+
+            # skip empty input
+            if len(cmd) == 0:
+                continue
+
             handler = self.get_command(*cmd)
             if handler is None:
                 print("ERR: unknown command")
