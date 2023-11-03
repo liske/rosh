@@ -138,6 +138,13 @@ class Rosh():
         if self.session is not None:
             self.session.message = prompt
 
+    def idx_to_ifname(self, idx):
+        link = next(iter(self.ipr.get_links(index=idx)), None)
+
+        if link is None:
+            return idx
+
+        return link.get_attr('IFLA_IFNAME', idx)
 
 def main():
     rosh = Rosh()

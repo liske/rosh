@@ -28,7 +28,7 @@ class RoshShowIpv6AddressCommand(RoshCommand):
         for addr in self.rosh.ipr.get_addr(family=self.family, **filter):
             tbl.add_row([
                 ip_interface(addr.get_attr('IFA_ADDRESS') + '/' + str(addr['prefixlen'])),
-                addr['index'],
+                self.rosh.idx_to_ifname(addr['index']),
                 addr['scope'],
                 addr['flags']
             ])

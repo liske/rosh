@@ -26,7 +26,7 @@ class RoshShowIpv6NeighbourCommand(RoshCommand):
             tbl.add_row([
                 neigh.get_attr('NDA_DST'),
                 neigh.get_attr('NDA_LLADDR'),
-                neigh['ifindex'],
+                self.rosh.idx_to_ifname(neigh['ifindex']),
                 neigh['flags'],
                 neigh['state']
             ])

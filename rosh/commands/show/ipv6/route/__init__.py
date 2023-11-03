@@ -21,7 +21,7 @@ class RoshShowIpv6RouteCommand(RoshCommand):
         tbl.field_names = ['dst', 'via', 'dev', 'prio', 'pref', 'proto', 'scope', 'flags']
         tbl.align['dst'] = 'l'
         tbl.align['via'] = 'l'
-        tbl.align['ifname'] = 'l'
+        tbl.align['dev'] = 'l'
         tbl.sortby = 'dst'
 
         for route in self.rosh.ipr.get_routes(family=self.family, **filter):
@@ -33,9 +33,9 @@ class RoshShowIpv6RouteCommand(RoshCommand):
             tbl.add_row([
                 ip_network(route.get_attr('RTA_DST', '::' if self.family == AF_INET6 else '0.0.0.0') + '/' + str(route['dst_len'])),
                 via,
-                route.get_attr('RTA_OIF'),
-                route.get_attr('RTA_PRIORITY'),
-                route.get_attr('RTA_PREF'),
+                self.rosh.idx_to_ifname(route.get_attr('RTA_OIF')),
+                route.get_attr('RTA_PRIORITY', '-'),
+                route.get_attr('RTA_PREF', '-'),
                 route['proto'],
                 route['scope'],
                 route['flags']
