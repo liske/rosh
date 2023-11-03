@@ -31,6 +31,7 @@ class Rosh():
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
                     complete_while_typing=True,
+                    reserve_space_for_menu=0,
                     validator=RoshValidator(self),
                     validate_while_typing=False,
         )
