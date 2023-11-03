@@ -42,55 +42,63 @@ class RoshShowInterfaceCommand(RoshCommand):
 
     def handler_iface(self, ifname):
         for link in self.rosh.ipr.get_links(ifname=ifname):
-            output = {
-                ifname: self.get_link_details(link)
-            }
+            self.print_link_details(link)
 
 
-    def get_link_details(self, link):
-        self.print({
-            'States': self.get_link_states(link)
-        })
+    def print_link_details(self, link):
+        self.output.print_header('States')
+        self.print_link_states(link)
 
         print()
-        self.print({
-            'Addresses': self.get_link_addresses(link)
-        })
+        self.output.print_header('Addresses')
+        self.print_link_addresses(link)
 
         if link.get_attr('IFLA_MTU') is not None:
             print()
-            self.print({
-                'MTU': self.get_link_mtu(link)
-            })
+            self.output.print_header('MTU')
+            self.print_link_mtu(link)
 
         print()
-        self.print({
-            'Link': self.get_link_device(link)
-        })
+        self.output.print_header('Link')
+        self.print_link_device(link)
 
-    def get_link_states(self, link):
-        return {
-            'admin': link['state'],
-            'oper': link.get_attr('IFLA_OPERSTATE').lower(),
-            'carrier': 'up' if link.get_attr('IFLA_CARRIER') else 'down',
-            'promisc': 'yes' if link.get_attr('IFLA_PROMISCUITY') else 'no',
+    def print_link_states(self, link):
+        details = {
+            'admin': self.output.quote_value(link['state']),
         }
 
-    def get_link_mtu(self, link):
+        oper = link.get_attr('IFLA_OPERSTATE').lower()
+        if oper == 'unknown':
+            details['oper'] = self.output.quote_na('unknown')
+        elif oper != link['state']:
+            details['oper'] = self.output.quote_warn(oper)
+        else:
+            details['oper'] = self.output.quote_ok(oper)
+
+        if link['state'] == 'up':
+            details['carrier'] = self.output.quote_ok('up') if link.get_attr('IFLA_CARRIER') else self.output.quote_warn('down')
+        else:
+            details['carrier'] = self.output.quote_att('up') if link.get_attr('IFLA_CARRIER') else self.output.quote_ok('down')
+
+        details['promisc'] = self.output.quote_att('yes') if link.get_attr('IFLA_PROMISCUITY') else 'no'
+
+        self.output.print_dict(details)
+
+    def print_link_mtu(self, link):
         mtu = {
-            'current': link.get_attr('IFLA_MTU'),
+            'current': self.output.quote_value(link.get_attr('IFLA_MTU')),
         }
         for limit in ['min', 'max']:
             val = link.get_attr(f'IFLA_{limit.upper()}_MTU', 0)
             if val > 0:
                 mtu[limit] = val
 
-        return mtu
+        self.output.print_dict(mtu)
 
-    def get_link_addresses(self, link):
+    def print_link_addresses(self, link):
         addresses = {
             'L2': {
-                'current': link.get_attr('IFLA_ADDRESS')
+                'current': self.output.quote_value(link.get_attr('IFLA_ADDRESS'))
             },
         }
 
@@ -99,14 +107,14 @@ class RoshShowInterfaceCommand(RoshCommand):
 
         ipaddrs = []
         for addr in self.rosh.ipr.get_addr(index=link['index']):
-            ipaddrs.append(addr.get_attr('IFA_ADDRESS') +
-                              '/' + str(addr['prefixlen']))
+            ipaddrs.append(self.output.quote_value(addr.get_attr('IFA_ADDRESS') +
+                              '/' + str(addr['prefixlen'])))
         if ipaddrs:
             addresses['L3'] = ipaddrs
 
-        return addresses                
+        self.output.print_dicts(addresses)
 
-    def get_link_device(self, link):
+    def print_link_device(self, link):
         device = {
             'index': link['index'],
         }
@@ -124,7 +132,7 @@ class RoshShowInterfaceCommand(RoshCommand):
         if dev:
             device['device'] = dev
 
-        return device
+        self.output.print_dict(device)
 
 
 is_rosh_command = True

@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
-from rosh.output import RoshOutputDict
+from rosh.output import RoshOutputDetails
 
 class RoshCommand():
     def __init__(self, rosh, completer=None):
         self.rosh = rosh
         self.completer = completer
-        self.print = RoshOutputDict().print
+        self.output = RoshOutputDetails()
 
     @abstractmethod
     def handler(self, cmd, *args):
