@@ -1,5 +1,3 @@
-from pyroute2 import netns
-
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
 from rosh.output import RoshOutputTable
@@ -9,10 +7,10 @@ class RoshShowInterfaceCommand(RoshCommand):
         super().__init__(rosh, link_completer)
 
     def handler(self, cmd, *args):
-        if len(args) == 1:
+        if len(args) == 0:
             self.handler_brief()
-        elif len(args) == 2:
-            self.handler_iface(args[1])
+        elif len(args) == 1:
+            self.handler_iface(args[0])
 
     def handler_brief(self):
         tbl = RoshOutputTable()

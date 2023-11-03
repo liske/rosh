@@ -46,11 +46,8 @@ class Rosh():
             if len(cmd) == 0:
                 continue
 
-            handler = self.get_command(*cmd)
-            if handler is None:
+            if not self.run_command(*cmd):
                 print("ERR: unknown command")
-            else:
-                handler(*cmd)
 
     @property
     def ipr(self):
@@ -117,17 +114,18 @@ class Rosh():
 
         return commands
 
-    def get_command(self, command, *args):
-        def _get_cmd(commands, command='', *args):
+    def run_command(self, command, *args):
+        def _run_cmd(commands, command='', *args):
             if command in commands:
                 if isinstance(commands[command], dict):
-                    return _get_cmd(commands[command], *args)
+                    return _run_cmd(commands[command], *args)
                 elif isinstance(commands[command], RoshCommand):
-                    return commands[command].handler
-                else:
-                    return commands[command]
+                    commands[command].handler(command, *args)
+                    return True
 
-        return _get_cmd(self.commands, command, *args)
+            return False
+
+        return _run_cmd(self.commands, command, *args)
 
     def set_prompt(self, prompt):
         self.ps1 = prompt
