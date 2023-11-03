@@ -16,6 +16,7 @@ import socket
 import rosh.commands
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
+from rosh.validator import RoshValidator
 
 
 class Rosh():
@@ -30,6 +31,8 @@ class Rosh():
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
                     complete_while_typing=True,
+                    validator=RoshValidator(self),
+                    validate_while_typing=False,
         )
 
         while True:
@@ -46,8 +49,11 @@ class Rosh():
             if len(cmd) == 0:
                 continue
 
-            if not self.run_command(*cmd):
+            (depth, command, arg0, args) = self.get_command(*cmd)
+            if not command:
                 print("ERR: unknown command")
+            else:
+                command.handler(arg0, *args)
 
     @property
     def ipr(self):
@@ -114,18 +120,17 @@ class Rosh():
 
         return commands
 
-    def run_command(self, command, *args):
-        def _run_cmd(commands, command='', *args):
+    def get_command(self, command, *args):
+        def _get_cmd(depth, commands, command='', *args):
             if command in commands:
                 if isinstance(commands[command], dict):
-                    return _run_cmd(commands[command], *args)
+                    return _get_cmd(depth + 1, commands[command], *args)
                 elif isinstance(commands[command], RoshCommand):
-                    commands[command].handler(command, *args)
-                    return True
+                    return (depth, commands[command], command, args)
 
-            return False
+            return (depth, None, command, args)
 
-        return _run_cmd(self.commands, command, *args)
+        return _get_cmd(1, self.commands, command, *args)
 
     def set_prompt(self, prompt):
         self.ps1 = prompt

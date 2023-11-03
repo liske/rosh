@@ -84,7 +84,7 @@ class RoshShowInterfaceCommand(RoshCommand):
 
     def print_link_mtu(self, link):
         mtu = {
-            'current': self.output.quote_value(link.get_attr('IFLA_MTU')),
+            'set': self.output.quote_value(link.get_attr('IFLA_MTU')),
         }
         for limit in ['min', 'max']:
             val = link.get_attr(f'IFLA_{limit.upper()}_MTU', 0)
@@ -96,7 +96,7 @@ class RoshShowInterfaceCommand(RoshCommand):
     def print_link_addresses(self, link):
         addresses = {
             'L2': {
-                'current': self.output.quote_value(link.get_attr('IFLA_ADDRESS'))
+                'effective': self.output.quote_value(link.get_attr('IFLA_ADDRESS'))
             },
         }
 
@@ -132,6 +132,14 @@ class RoshShowInterfaceCommand(RoshCommand):
 
         self.output.print_dict(device)
 
+    def validate(self, cmd, args):
+        if len(args) > 1:
+            return (1, "to many parameters (>1)")
+
+        if len(args) == 1 and not args[0] in link_completer.get_links():
+            return (0, f"{args[0]} does not exist")
+
+        return (None, None)
 
 is_rosh_command = True
 rosh_command = RoshShowInterfaceCommand

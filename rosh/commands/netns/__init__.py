@@ -19,5 +19,14 @@ class RoshNetnsCommand(RoshCommand):
 
         self.rosh.ipr = NetNS(ns)
 
+    def validate(self, cmd, args):
+        if len(args) > 1:
+            return (1, "to many parameters (>1)")
+
+        if len(args) == 1 and not args[0] in netns.listnetns():
+            return (0, f"{args[0]} does not exist")
+
+        return (None, None)
+
 is_rosh_command = True
 rosh_command = RoshNetnsCommand

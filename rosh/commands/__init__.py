@@ -11,3 +11,7 @@ class RoshCommand():
     @abstractmethod
     def handler(self, cmd, *args):
         pass
+
+    @abstractmethod
+    def validate(self, cmd, args):
+        return (None, None)

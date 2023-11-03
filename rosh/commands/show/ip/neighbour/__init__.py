@@ -13,7 +13,6 @@ class RoshShowIpNeighbourCommand(RoshCommand):
             self.handler_iface(args[0])
 
     def dump_neigh(self, **filter):
-        print(filter)
         tbl = RoshOutputTable()
         tbl.field_names = ['dst', 'lladdr', 'ifname', 'flags', 'state']
         tbl.align['dst'] = 'l'
@@ -36,6 +35,14 @@ class RoshShowIpNeighbourCommand(RoshCommand):
     def handler_iface(self, ifname):
         self.dump_neigh(ifname=ifname)
 
+    def validate(self, cmd, args):
+        if len(args) > 1:
+            return (1, "to many parameters (>1)")
+
+        if len(args) == 1 and not args[0] in link_completer.get_links():
+            return (0, f"{args[0]} does not exist")
+
+        return (None, None)
 
 is_rosh_command = True
 rosh_command = RoshShowIpNeighbourCommand
