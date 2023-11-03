@@ -75,6 +75,7 @@ class Rosh():
 
         # clear lookup cache
         self.cache_idx_to_ifname = TTLCache(maxsize=32, ttl=20)
+        self.cache_ifname_to_idx = TTLCache(maxsize=32, ttl=20)
 
         link_completer.ipr = value
 
@@ -159,6 +160,23 @@ class Rosh():
         self.cache_idx_to_ifname[idx] = ifname
 
         return ifname
+
+    def ifname_to_idx(self, ifname):
+        # cache lookup
+        idx = self.cache_ifname_to_idx.get(ifname)
+        if idx is not None:
+            return idx
+
+        link = next(iter(self.ipr.get_links(ifname=ifname)), None)
+
+        if link is None:
+            idx = 0
+        else:
+            idx = link['index']
+
+        self.cache_ifname_to_idx[ifname] = idx
+
+        return idx
 
 def main():
     rosh = Rosh()

@@ -1,4 +1,5 @@
-from ipaddress import ip_address, ip_network
+from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
+from prompt_toolkit.completion import NestedCompleter
 from socket import AF_INET6
 
 from rosh.commands import RoshCommand
@@ -7,14 +8,20 @@ from rosh.output import RoshOutputTable
 
 class RoshShowIpv6RouteCommand(RoshCommand):
     def __init__(self, rosh):
-        super().__init__(rosh, link_completer)
+        self.commands = {
+            '': None,
+            'dev': link_completer,
+            'via': None,
+        }
+        super().__init__(rosh, NestedCompleter.from_nested_dict(self.commands))
         self.family = AF_INET6
 
     def handler(self, cmd, *args):
-        if len(args) == 0:
-            self.handler_brief()
-        elif len(args) == 1:
-            self.handler_iface(args[0])
+        (pos, msg, kwargs) = self.parse_args(cmd, args)
+
+        assert pos is None
+
+        self.dump_route(**kwargs)
 
     def dump_route(self, **filter):
         tbl = RoshOutputTable()
@@ -42,20 +49,44 @@ class RoshShowIpv6RouteCommand(RoshCommand):
             ])
         print(tbl)
 
-    def handler_brief(self):
-        self.dump_route()
-
-    def handler_iface(self, ifname):
-        self.dump_route(ifname=ifname)
-
     def validate(self, cmd, args):
-        if len(args) > 1:
-            return (1, "to many parameters (>1)")
+        (pos, msg, kwargs) = self.parse_args(cmd, args)
 
-        if len(args) == 1 and not args[0] in link_completer.get_links():
-            return (0, f"{args[0]} does not exist")
+        return (pos, msg)
 
-        return (None, None)
+    def parse_args(self, cmd, args):
+        if len(args) == 0:
+            return (None, None, {})
+
+        filters = []
+        kwargs = {}
+
+        for i in range(0, len(args), 2):
+            if args[i] not in self.commands:
+                return (i, 'invalid filter name', None)
+
+            if args[i] in filters:
+                return (i, f'filter "{args[i]}" already applied', None)
+
+            filters.append(args[0])
+
+            if i + 1 == len(args):
+                return (i + 1, 'missing filter value', None)
+
+            if args[i] == 'dev':
+                if args[i + 1] not in link_completer.get_links():
+                    return (i + 1, f'interface "{args[i + 1]}" does not exist', None)
+                kwargs['oif'] = self.rosh.ifname_to_idx(args[i + 1])
+            elif args[i] == 'via':
+                try:
+                    if self.family == AF_INET6:
+                        kwargs['gateway'] = IPv6Address(args[i + 1])
+                    else:
+                        kwargs['gateway'] = IPv4Address(args[i + 1])
+                except ValueError as err:
+                    return (i + 1, str(err))
+
+        return (None, None, kwargs)
 
 
 is_rosh_command = True
