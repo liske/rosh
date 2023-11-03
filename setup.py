@@ -20,9 +20,7 @@ def install_requires():
     requires = [
         "prettytable",
         "prompt_toolkit",
-        "pygments",
         "pyroute2",
-        "pyyaml",
         "fuzzyfinder",
         "setproctitle"
     ]
