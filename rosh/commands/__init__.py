@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+import pyroute2.netns
 import subprocess
 
 from rosh.output import RoshOutputDetails
+
 
 class RoshCommand():
     def __init__(self, rosh, completer=None):
@@ -25,12 +27,20 @@ class RoshSystemCommand(RoshCommand):
     @abstractmethod
     def handler(self, cmd, *args):
         print()
+
+        if getattr(self.rosh.ipr, 'netns', None):
+            pyroute2.netns.pushns(self.rosh.ipr.netns)
+
         try:
-            p = subprocess.Popen([self.cmd, *args])
-            p.wait()
-        except KeyboardInterrupt:
-            p.terminate()
-            p.wait()
+            try:
+                p = subprocess.Popen([self.cmd, *args])
+                p.wait()
+            except KeyboardInterrupt:
+                p.terminate()
+                p.wait()
+        finally:
+            if getattr(self.rosh.ipr, 'netns', None):
+                pyroute2.netns.popns()
         print()
 
     @abstractmethod
