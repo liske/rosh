@@ -1,4 +1,4 @@
-import shutils
+import shutil
 
 from rosh.commands import RoshSystemCommand
 

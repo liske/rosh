@@ -24,7 +24,6 @@ class RoshSystemCommand(RoshCommand):
         super().__init__(rosh)
         self.cmd = cmd
 
-    @abstractmethod
     def handler(self, cmd, *args):
         print()
 
