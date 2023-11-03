@@ -5,6 +5,7 @@ from socket import AF_INET6
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
 from rosh.output import RoshOutputTable
+from rosh.rtlookup import protos, scopes
 
 class RoshShowIpv6RouteCommand(RoshCommand):
     def __init__(self, rosh):
@@ -43,8 +44,8 @@ class RoshShowIpv6RouteCommand(RoshCommand):
                 self.rosh.idx_to_ifname(route.get_attr('RTA_OIF')),
                 route.get_attr('RTA_PRIORITY', '-'),
                 route.get_attr('RTA_PREF', '-'),
-                route['proto'],
-                route['scope'],
+                protos.lookup_str(route['proto']),
+                scopes.lookup_str(route['scope']),
                 route['flags']
             ])
         print(tbl)

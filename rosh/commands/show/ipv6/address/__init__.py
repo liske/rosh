@@ -4,6 +4,7 @@ from socket import AF_INET6
 
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
+from rosh.rtlookup import scopes
 from rosh.output import RoshOutputTable
 
 
@@ -29,7 +30,7 @@ class RoshShowIpv6AddressCommand(RoshCommand):
             tbl.add_row([
                 ip_interface(addr.get_attr('IFA_ADDRESS') + '/' + str(addr['prefixlen'])),
                 self.rosh.idx_to_ifname(addr['index']),
-                addr['scope'],
+                scopes.lookup_str(addr['scope']),
                 addr['flags']
             ])
         print(tbl)
