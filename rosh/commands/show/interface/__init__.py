@@ -1,16 +1,47 @@
-from rosh.commands import RoshCommand
-from rosh.completer import link_completer
+from prompt_toolkit.completion import WordCompleter
+import shutil
+
+from rosh.commands import RoshCommand, RoshSystemCommand
+from rosh.completer import link_completer, RoshPeerCompleter
 from rosh.output import RoshOutputTable
+
+
+ethtool_exe = shutil.which('ethtool')
+
+class RoshEthtoolCommand(RoshSystemCommand):
+    def __init__(self, rosh):
+        super().__init__(rosh, ethtool_exe)
 
 class RoshShowInterfaceCommand(RoshCommand):
     def __init__(self, rosh):
-        super().__init__(rosh, link_completer)
+        self.ethtool_args = {
+            'settings': '-I',
+            'coalesce': '-c',
+            'driver': '-i',
+            'eee': '--show-eee',
+            'features': '-k',
+            'module': '-m',
+            'pause': '-a',
+            'ring': '-g',
+            'stats': '-S',
+            'tstamp': '-T',
+        }
+        self.ethtool_command = RoshEthtoolCommand(rosh)
+
+        if ethtool_exe is None:
+             completer = link_completer
+        else:
+            completer = RoshPeerCompleter(link_completer, WordCompleter(['', *self.ethtool_args.keys()]))
+
+        super().__init__(rosh, completer)
 
     def handler(self, cmd, *args):
         if len(args) == 0:
             self.handler_brief()
         elif len(args) == 1:
             self.handler_iface(args[0])
+        elif len(args) == 2:
+            self.handler_ethtool(args[0], args[1])
 
     def handler_brief(self):
         tbl = RoshOutputTable()
@@ -132,12 +163,18 @@ class RoshShowInterfaceCommand(RoshCommand):
 
         self.output.print_dict(device)
 
-    def validate(self, cmd, args):
-        if len(args) > 1:
-            return (1, "to many parameters (>1)")
+    def handler_ethtool(self, iface, cmd):
+        self.ethtool_command.handler(None, self.ethtool_args[cmd], iface)
 
-        if len(args) == 1 and not args[0] in link_completer.get_links():
+    def validate(self, cmd, args):
+        if len(args) > 2:
+            return (2, "to many parameters (>2)")
+
+        if len(args) >= 1 and not args[0] in link_completer.get_links():
             return (0, f"{args[0]} does not exist")
+
+        if len(args) == 2 and not args[1] in self.ethtool_args:
+            return (1, f"subcommand {args[1]} is invalid")
 
         return (None, None)
 
