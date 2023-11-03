@@ -18,6 +18,7 @@ def version():
 
 def install_requires():
     requires = [
+        "cachetools",
         "prettytable",
         "prompt_toolkit",
         "pyroute2",

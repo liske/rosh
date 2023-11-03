@@ -1,5 +1,6 @@
 __version__ = '0.0.1'
 
+from cachetools import cached, TTLCache
 from collections import namedtuple
 from fuzzyfinder import fuzzyfinder
 import importlib
@@ -71,6 +72,10 @@ class Rosh():
         '''
 
         self._ipr = value
+
+        # clear lookup cache
+        self.cache_idx_to_ifname = TTLCache(maxsize=32, ttl=20)
+
         link_completer.ipr = value
 
         if getattr(value, 'netns', None) is not None:
@@ -139,12 +144,21 @@ class Rosh():
             self.session.message = prompt
 
     def idx_to_ifname(self, idx):
+        # cache lookup
+        ifname = self.cache_idx_to_ifname.get(idx)
+        if ifname is not None:
+            return ifname
+
         link = next(iter(self.ipr.get_links(index=idx)), None)
 
         if link is None:
-            return idx
+            ifname = idx
+        else:
+            ifname = link.get_attr('IFLA_IFNAME', idx)
 
-        return link.get_attr('IFLA_IFNAME', idx)
+        self.cache_idx_to_ifname[idx] = ifname
+
+        return ifname
 
 def main():
     rosh = Rosh()
