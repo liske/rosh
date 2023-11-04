@@ -1,5 +1,4 @@
 from prompt_toolkit import print_formatted_text as print, HTML
-import yaml
 
 class RoshOutputDetails():
     def quote(self, text):
