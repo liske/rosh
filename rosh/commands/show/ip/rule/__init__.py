@@ -4,6 +4,8 @@ from rosh.commands.show.ipv6.rule import RoshShowIpv6RuleCommand
 
 
 class RoshShowIpRuleCommand(RoshShowIpv6RuleCommand):
+    description = 'show ipv4 routing policy rules'
+
     def __init__(self, rosh):
         super().__init__(rosh)
         self.family = AF_INET

@@ -5,6 +5,8 @@ from rosh.completer import netns_completer
 from rosh.output import RoshOutputTable
 
 class RoshShowNetnsCommand(RoshCommand):
+    description = 'show netns namespaces'
+
     def __init__(self, rosh):
         super().__init__(rosh, netns_completer)
 

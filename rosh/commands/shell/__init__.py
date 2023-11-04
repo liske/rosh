@@ -6,6 +6,8 @@ from rosh.commands import RoshSystemCommand
 shell_exe = os.environ.get('SHELL', shutil.which('sh'))
 
 class RoshShellCommand(RoshSystemCommand):
+    description = 'launch a interactive system shell'
+
     def __init__(self, rosh):
         super().__init__(rosh, shell_exe)
 

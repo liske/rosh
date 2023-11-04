@@ -6,6 +6,8 @@ from rosh.completer import link_completer, RoshTuplesCompleter
 from rosh.output import RoshOutputTable
 
 class RoshShowIpv6NeighbourCommand(RoshCommand):
+    description = 'show ipv4 neighbour cache entries'
+
     def __init__(self, rosh):
         self.subcommands = {
             'dev': link_completer,

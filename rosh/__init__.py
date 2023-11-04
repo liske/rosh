@@ -1,5 +1,6 @@
 __version__ = '0.0.1'
 
+import argparse
 from cachetools import cached, TTLCache
 from collections import namedtuple
 from fuzzyfinder import fuzzyfinder
@@ -11,14 +12,15 @@ from prompt_toolkit.completion import NestedCompleter
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.shortcuts import set_title
 from pyroute2 import IPRoute
+from setproctitle import setproctitle
 import shlex
 import socket
+import sys
 
 import rosh.commands
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
 from rosh.validator import RoshValidator
-
 
 class Rosh():
     def __init__(self):
@@ -37,6 +39,10 @@ class Rosh():
                     validate_while_typing=False,
         )
 
+    def prompt_loop(self):
+        '''
+        Main REPL loop, will never return.
+        '''
         while True:
             try:
                 text = self.session.prompt()
@@ -56,6 +62,19 @@ class Rosh():
                 print("ERR: unknown command")
             else:
                 command.handler(arg0, *args)
+
+    def dump_commands(self):
+        def _dump(indent, commands):
+            for cmd, val in sorted(commands.items(), key=lambda x: x[0]):
+                if isinstance(val, RoshCommand):
+                    description = getattr(val, 'description', '')
+                    print("{}- {}".format(''.ljust(indent), cmd).ljust(20), description)
+                else:
+                    print("{}- {}".format(''.ljust(indent), cmd))
+                    _dump(indent+2, val)
+
+        print("rosh commands:")
+        _dump(0, self.commands)
 
     @property
     def ipr(self):
@@ -179,7 +198,32 @@ class Rosh():
         return idx
 
 def main():
+    # update proc title
+    setproctitle(sys.argv[0])
+
+    # prepare argument parsing
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--version', action='version',
+                    version='%(prog)s {version}'.format(version=__version__))
+
+    subparsers = parser.add_subparsers(
+        dest='action', required=False, help="specifies the action to perform")
+
+    action_parsers = {
+        'shell': subparsers.add_parser('shell', help='run interactive shell (default)'),
+        'commands': subparsers.add_parser('commands', help='dump available commands'),
+    }
+
+    args = parser.parse_args()
+    action = args.action or 'shell'
+
+    assert action in action_parsers
+
     rosh = Rosh()
+    if action == 'shell':
+        rosh.prompt_loop()
+    elif action == 'commands':
+        rosh.dump_commands()
 
 if __name__ == "__main__":
     main()

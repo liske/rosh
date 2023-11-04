@@ -17,6 +17,8 @@ FRA_ACTIONS = {
 }
 
 class RoshShowIpv6RuleCommand(RoshCommand):
+    description = 'show ipv6 routing policy rules'
+
     def __init__(self, rosh):
         super().__init__(rosh, link_completer)
         self.family = AF_INET6

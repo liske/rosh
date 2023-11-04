@@ -9,6 +9,8 @@ from rosh.output import RoshOutputTable
 
 
 class RoshShowIpv6AddressCommand(RoshCommand):
+    description = 'show assigned ipv6 addresses'
+
     def __init__(self, rosh):
         super().__init__(rosh, link_completer)
         self.family = AF_INET6

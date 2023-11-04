@@ -13,6 +13,8 @@ class RoshEthtoolCommand(RoshSystemCommand):
         super().__init__(rosh, ethtool_exe)
 
 class RoshShowInterfaceCommand(RoshCommand):
+    description = 'show interface details'
+
     def __init__(self, rosh):
         self.ethtool_args = {
             'settings': '-I',

@@ -8,6 +8,8 @@ from rosh.output import RoshOutputTable
 from rosh.rtlookup import protos, scopes
 
 class RoshShowIpv6RouteCommand(RoshCommand):
+    description = 'show ipv6 routes'
+
     def __init__(self, rosh):
         self.commands = {
             '': None,

@@ -1,6 +1,8 @@
 from rosh.commands import RoshCommand
 
 class RoshExitCommand(RoshCommand):
+    description = "exit from rosh"
+
     def handler(self, cmd, *args):
         exit(0)
 

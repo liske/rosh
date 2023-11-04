@@ -4,6 +4,8 @@ from rosh.commands import RoshCommand
 from rosh.completer import netns_completer
 
 class RoshNetnsCommand(RoshCommand):
+    description = "change active netns namespace for subsequent commands"
+
     def __init__(self, rosh):
         super().__init__(rosh, netns_completer)
 
