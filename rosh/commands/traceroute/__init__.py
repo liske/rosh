@@ -3,7 +3,7 @@ import shutil
 from rosh.commands import RoshSystemCommand
 
 
-traceroute_exe = shutil.which('ping')
+traceroute_exe = shutil.which('traceroute')
 
 class RoshTracerouteCommand(RoshSystemCommand):
     description = 'execute traceroute command'
