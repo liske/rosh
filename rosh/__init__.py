@@ -9,8 +9,9 @@ import pkgutil
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter
-from prompt_toolkit.history import FileHistory
+from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import set_title
+from prompt_toolkit.styles import Style
 from pyroute2 import IPRoute
 from setproctitle import setproctitle
 import shlex
@@ -30,11 +31,24 @@ class Rosh():
         self.ipr = IPRoute()
         self.commands = self.find_commands(rosh.commands)
 
+        style = Style.from_dict({
+            # User input (default text).
+            '':             '',
+
+            # Prompt.
+            'host':         '#fff bg:#209680',
+            'host_end':     '#209680',
+            'host_netns':   '#209680 bg:#aadd00',
+            'netns':        '#000 bg:#aadd00 bold',
+            'netns_end':    '#aadd00',
+        })
+
         self.session = PromptSession(self.ps1,
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
                     complete_while_typing=True,
-                    reserve_space_for_menu=0,
+                    reserve_space_for_menu=2,
+                    style=style,
                     validator=RoshValidator(self),
                     validate_while_typing=False,
         )
@@ -98,10 +112,22 @@ class Rosh():
 
         link_completer.ipr = value
 
+        hostname = socket.gethostname() or localhost
+
         if getattr(value, 'netns', None) is not None:
-            self.set_prompt("{}#{}> ".format(socket.gethostname(), value.netns))
+            self.set_prompt([
+                ('class:host', f' ⬤ {hostname} '),
+                ('class:host_netns', ''),
+                ('class:netns', f' {value.netns} '),
+                ('class:netns_end', ''),
+                ('', ' '),
+            ])
         else:
-            self.set_prompt("{}> ".format(socket.gethostname()))
+            self.set_prompt([
+                ('class:host', f' ⬤ {hostname} '),
+                ('class:host_end', ''),
+                ('', ' '),
+            ])
 
     def get_completers(self, commands=None):
         if commands is None:
