@@ -24,11 +24,9 @@ from rosh.commands import RoshCommand
 from rosh.completer import link_completer
 from rosh.validator import RoshValidator
 
+# terminal with restricted color and font support (linux, xterm, vt100)
 BASE_STYLE = Style.from_dict({
-    # User input (default text).
     '':             '',
-
-    # Prompt.
     'host':         '#fff bg:#209680',
     'host_end':     '#209680',
     'host_netns':   '#209680 bg:#aadd00',
@@ -37,11 +35,9 @@ BASE_STYLE = Style.from_dict({
 })
 BASE_SYMBOLS = SimpleNamespace(router='●', delimiter='◤')
 
+# modern terminals (default)
 EXTENDED_STYLE = Style.from_dict({
-    # User input (default text).
     '':             '',
-
-    # Prompt.
     'host':         '#fff bg:#209680',
     'host_end':     '#209680',
     'host_netns':   '#209680 bg:#aadd00',
@@ -51,6 +47,10 @@ EXTENDED_STYLE = Style.from_dict({
 EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='')
 
 class Rosh():
+    '''
+    This is the main class of RoSh providing the prompt-toolkit
+    PromptSession.
+    '''
     def __init__(self):
         set_title("rosh@{}".format(socket.getfqdn()))
 
@@ -100,6 +100,9 @@ class Rosh():
                 command.handler(arg0, *args)
 
     def dump_commands(self):
+        '''
+        Prints the available command hierarchy to the terminal.
+        '''
         def _dump(indent, commands):
             for cmd, val in sorted(commands.items(), key=lambda x: x[0]):
                 if isinstance(val, RoshCommand):
@@ -152,6 +155,9 @@ class Rosh():
             ])
 
     def get_completers(self, commands=None):
+        '''
+        Extracts the completers from commands dict.
+        '''
         if commands is None:
             commands = self.commands
 
@@ -167,6 +173,10 @@ class Rosh():
         return d
 
     def find_commands(self, ns_pkg):
+        '''
+        Finds packages in a namespace which have a `is_rosh_command`
+        attribute set to `True`, recursively.
+        '''
         commands = {}
         strip = len(ns_pkg.__name__) + 1
 
@@ -195,6 +205,14 @@ class Rosh():
         return commands
 
     def get_command(self, command, *args):
+        '''
+        Traverses the internal commands dict searching for the command
+        and returns a tuple:
+        - the depth where the command has matched (if any)
+        - the RoshCommand that matched (or None)
+        - the command name that matched
+        - additional command parameters
+        '''
         def _get_cmd(depth, commands, command='', *args):
             if command in commands:
                 if isinstance(commands[command], dict):
@@ -207,11 +225,20 @@ class Rosh():
         return _get_cmd(1, self.commands, command, *args)
 
     def set_prompt(self, prompt):
+        '''
+        Updates the prompt prefix.
+        '''
         self.ps1 = prompt
         if self.session is not None:
             self.session.message = prompt
 
     def idx_to_ifname(self, idx):
+        '''
+        Converts an ifindex into a ifname (returns ifindex if the name
+        cannot be resolved).
+
+        The lookup is cached for 20s.
+        '''
         # cache lookup
         ifname = self.cache_idx_to_ifname.get(idx)
         if ifname is not None:
@@ -229,6 +256,12 @@ class Rosh():
         return ifname
 
     def ifname_to_idx(self, ifname):
+        '''
+        Converts an ifname into a ifindex (returns 0 if the name
+        cannot be resolved).
+
+        The lookup is cached for 20s.
+        '''
         # cache lookup
         idx = self.cache_ifname_to_idx.get(ifname)
         if idx is not None:
