@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from prompt_toolkit.application import run_in_terminal
+import os.path
 import pyroute2.netns
 import subprocess
 
@@ -21,16 +22,17 @@ class RoshCommand():
         return (None, None)
 
 class RoshSystemCommand(RoshCommand):
-    def __init__(self, rosh, cmd):
+    def __init__(self, rosh, exe):
         super().__init__(rosh)
-        self.cmd = cmd
+        self.cmd = os.path.basename(exe)
+        self.exe = exe
 
     def handler(self, cmd, *args):
         def _run():
             print()
 
             try:
-                p = subprocess.Popen([self.cmd, *args])
+                p = subprocess.Popen([self.cmd, *args], executable=self.exe)
                 p.wait()
             except KeyboardInterrupt:
                 p.terminate()
