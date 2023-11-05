@@ -7,8 +7,7 @@ class RoshShowIpAddressCommand(RoshShowIpv6AddressCommand):
     description = 'show assigned ipv4 addresses'
 
     def __init__(self, rosh):
-        super().__init__(rosh)
-        self.family = AF_INET
+        super().__init__(rosh, AF_INET)
 
 
 is_rosh_command = True

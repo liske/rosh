@@ -1,25 +1,30 @@
 from socket import AF_INET6
 
-from rosh.commands import RoshCommand
-from rosh.completer import link_completer, protos_completer, RoshTuplesCompleter
+from rosh.commands import RoshTuplesCommand
+from rosh.completer import link_completer, proto_completer, neighstate_completer, RoshIpCompleter, RoshTuplesCompleter
+from rosh.lookup import neigh_flags, neigh_states
 from rosh.output import RoshOutputTable
 
-class RoshShowIpv6NeighbourCommand(RoshCommand):
+class RoshShowIpv6NeighbourCommand(RoshTuplesCommand):
     description = 'show ipv4 neighbour cache entries'
 
-    def __init__(self, rosh):
-        self.subcommands = {
-            'dev': link_completer,
-            'proto': protos_completer,
-        }
-        super().__init__(rosh, RoshTuplesCompleter(self.subcommands))
-        self.family = AF_INET6
+    def __init__(self, rosh, family=AF_INET6):
+        self.family = family
+
+        completer = RoshTuplesCompleter({
+            'dst': RoshIpCompleter(family),
+            'ifindex': link_completer,
+            'state': neighstate_completer,
+        })
+
+        super().__init__(rosh, completer)
 
     def handler(self, cmd, *args):
-        if len(args) == 0:
-            self.handler_brief()
-        elif len(args) == 1:
-            self.handler_iface(args[0])
+        (pos, msg, kwargs) = self.parse_args(cmd, args)
+
+        assert pos is None
+
+        self.dump_neigh(**kwargs)
 
     def dump_neigh(self, **filter):
         tbl = RoshOutputTable()
@@ -30,28 +35,13 @@ class RoshShowIpv6NeighbourCommand(RoshCommand):
 
         for neigh in self.rosh.ipr.get_neighbours(family=self.family, **filter):
             tbl.add_row([
-                neigh.get_attr('NDA_DST'),
-                neigh.get_attr('NDA_LLADDR'),
+                neigh.get_attr('NDA_DST',''),
+                neigh.get_attr('NDA_LLADDR', '(incomplete)'),
                 self.rosh.idx_to_ifname(neigh['ifindex']),
-                neigh['flags'],
-                neigh['state']
+                neigh_flags.lookup_str(neigh['flags']) or '-',
+                neigh_states.lookup_str(neigh['state']) or '-'
             ])
         print(tbl)
-
-    def handler_brief(self):
-        self.dump_neigh()
-
-    def handler_iface(self, ifname):
-        self.dump_neigh(ifname=ifname)
-
-    def validate(self, cmd, args):
-        if len(args) > 1:
-            return (1, "to many parameters (>1)")
-
-        if len(args) == 1 and not args[0] in link_completer.get_links():
-            return (0, f"{args[0]} does not exist")
-
-        return (None, None)
 
 
 is_rosh_command = True

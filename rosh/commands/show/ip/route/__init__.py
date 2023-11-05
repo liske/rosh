@@ -7,8 +7,7 @@ class RoshShowIpRouteCommand(RoshShowIpv6RouteCommand):
     description = 'show ipv4 routes'
 
     def __init__(self, rosh):
-        super().__init__(rosh)
-        self.family = AF_INET
+        super().__init__(rosh, AF_INET)
 
 
 is_rosh_command = True

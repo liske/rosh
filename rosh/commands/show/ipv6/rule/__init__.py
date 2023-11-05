@@ -1,9 +1,10 @@
 from ipaddress import ip_address, ip_network
 from socket import AF_INET6
 
-from rosh.commands import RoshCommand
-from rosh.completer import link_completer
+from rosh.commands import RoshTuplesCommand
+from rosh.completer import link_completer, proto_completer, table_completer, RoshTuplesCompleter, RoshPfxCompleter
 from rosh.output import RoshOutputTable
+from rosh.rtlookup import protos, tables
 
 
 FRA_ACTIONS = {
@@ -16,18 +17,29 @@ FRA_ACTIONS = {
      8: 'prohibit',
 }
 
-class RoshShowIpv6RuleCommand(RoshCommand):
+class RoshShowIpv6RuleCommand(RoshTuplesCommand):
     description = 'show ipv6 routing policy rules'
 
-    def __init__(self, rosh):
-        super().__init__(rosh, link_completer)
-        self.family = AF_INET6
+    def __init__(self, rosh, family=AF_INET6):
+        self.family = family
+
+        completer = RoshTuplesCompleter({
+            'dst': RoshPfxCompleter(family),
+            'src': RoshPfxCompleter(family),
+            'iif': link_completer,
+            'oif': link_completer,
+            'proto': proto_completer,
+            'table': table_completer
+        })
+
+        super().__init__(rosh, completer)
 
     def handler(self, cmd, *args):
-        if len(args) == 0:
-            self.handler_brief()
-        elif len(args) == 1:
-            self.handler_iface(args[0])
+        (pos, msg, kwargs) = self.parse_args(cmd, args)
+
+        assert pos is None
+
+        self.dump_rule(**kwargs)
 
     def dump_rule(self, **filter):
         tbl = RoshOutputTable()
@@ -38,7 +50,7 @@ class RoshShowIpv6RuleCommand(RoshCommand):
         for rule in self.rosh.ipr.get_rules(family=self.family, **filter):
             action = FRA_ACTIONS.get(rule['action'], rule['action'])
             if action == 'lookup':
-                target = rule.get_attr('FRA_TABLE', '-')
+                target = tables.lookup_str(rule.get_attr('FRA_TABLE', '-'))
             elif action == 'goto':
                 target = rule.get_attr('FRA_GOTO', '-')
             else:
@@ -56,8 +68,6 @@ class RoshShowIpv6RuleCommand(RoshCommand):
             else:
                 src = 'all'
 
-            from pprint import pprint
-            pprint(rule)
             tbl.add_row([
                 rule.get_attr('FRA_PRIORITY', 0),
                 dst,
@@ -68,24 +78,9 @@ class RoshShowIpv6RuleCommand(RoshCommand):
                 rule.get_attr('FRA_IP_PROTO', '-'),
                 action,
                 target,
-                rule.get('protocol', '-')
+                protos.lookup_str(rule.get('protocol', '-'))
             ])
         print(tbl)
-
-    def handler_brief(self):
-        self.dump_rule()
-
-    def handler_iface(self, ifname):
-        self.dump_rule(ifname=ifname)
-
-    def validate(self, cmd, args):
-        if len(args) > 1:
-            return (1, "to many parameters (>1)")
-
-        if len(args) == 1 and not args[0] in link_completer.get_links():
-            return (0, f"{args[0]} does not exist")
-
-        return (None, None)
 
 
 is_rosh_command = True

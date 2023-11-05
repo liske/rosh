@@ -1,9 +1,12 @@
-from prompt_toolkit.completion import Completer, WordCompleter
+from ipaddress import IPv4Address, IPv6Address, IPv4Network, IPv6Network
+from prompt_toolkit.completion import Completer, DummyCompleter, WordCompleter
 from prompt_toolkit.document import Document
 from pyroute2 import netns, IPRoute
 import shlex
+from socket import AF_INET, AF_INET6
 
 from rosh.commands import RoshCommand
+from rosh.lookup import neigh_flags, neigh_states, ifa_flags
 from rosh.rtlookup import protos, realms, tables, scopes
 
 
@@ -40,7 +43,15 @@ class RoshTuplesCompleter(Completer):
 
         # build recursive completer
         for keyword, completer in tuples.items():
-            self.tuples[keyword] = completer
+            # get tuples not completed, yet
+            other_tuples = tuples.copy()
+            del other_tuples[keyword]
+
+            # chain current completer with completers of remaining tuples
+            self.tuples[keyword] = RoshPeerCompleter(
+                completer,
+                RoshTuplesCompleter(other_tuples)
+            )
 
         # keyword completer
         self.keywords_completer = WordCompleter(tuples.keys())
@@ -69,7 +80,25 @@ class RoshTuplesCompleter(Completer):
         else:
             yield from self.keywords_completer.get_completions(document, complete_event)
 
-class RoshLinkCompleter(WordCompleter):
+class RoshWordCompleter(WordCompleter):
+    def parse_value(self, rosh, name, value):
+        words = self.words
+        if callable(words):
+            words = words()
+
+        if value not in words:
+            if getattr(self, 'description', None) is not None:
+                raise ValueError(f'{value} is invalid for {self.description}')
+            else:
+                raise ValueError(f'{value} is a invalid value')
+
+        lookup_id = getattr(self, 'lookup_id', None)
+        if callable(lookup_id):
+            return lookup_id(rosh, value)
+
+        return value
+
+class RoshLinkCompleter(RoshWordCompleter):
     description = '{ifname}'
 
     def __init__(self):
@@ -86,7 +115,10 @@ class RoshLinkCompleter(WordCompleter):
                 links.append(shlex.quote(link.get_attr('IFLA_IFNAME')))
         return links
 
-class RoshNetNSCompleter(WordCompleter):
+    def lookup_id(self, rosh, ifname):
+        return rosh.ifname_to_idx(ifname)
+
+class RoshNetNSCompleter(RoshWordCompleter):
     description = '{netns}'
 
     def __init__(self):
@@ -98,45 +130,125 @@ class RoshNetNSCompleter(WordCompleter):
             l.append(shlex.quote(ns))
         return l
 
-class RoshProtoCompleter(WordCompleter):
+class RoshProtoCompleter(RoshWordCompleter):
     description = '{proto}'
 
     def __init__(self):
         super().__init__(self.get_protos)
 
     def get_protos(self):
-        return protos
+        return protos.str2id.keys()
 
-class RoshRealmCompleter(WordCompleter):
+    def lookup_id(self, rosh, proto):
+        return protos.lookup_id(proto)
+
+class RoshRealmCompleter(RoshWordCompleter):
     description = '{realm}'
 
     def __init__(self):
         super().__init__(self.get_realms)
 
     def get_realms(self):
-        return realms
+        return realms.str2id.keys()
 
-class RoshScopeCompleter(WordCompleter):
+    def lookup_id(self, rosh, realm):
+        return realms.lookup_id(realm)
+
+class RoshScopeCompleter(RoshWordCompleter):
     description = '{scope}'
 
     def __init__(self):
         super().__init__(self.get_scopes)
 
     def get_scopes(self):
-        return scopes
+        return scopes.str2id.keys()
 
-class RoshTableCompleter(WordCompleter):
+    def lookup_id(self, rosh, scope):
+        return scopes.lookup_id(scope)
+
+class RoshTableCompleter(RoshWordCompleter):
     description = '{table}'
 
     def __init__(self):
         super().__init__(self.get_tables)
 
     def get_tables(self):
-        return tables
+        return tables.str2id.keys()
+
+    def lookup_id(self, rosh, table):
+        return tables.lookup_id(table)
+
+class RoshIpv4Completer(DummyCompleter):
+    description = '{ip}'
+
+    def parse_value(self, rosh, name, value):
+        return str(IPv4Address(value))
+
+class RoshIpv6Completer(DummyCompleter):
+    description = '{ipv6}'
+
+    def parse_value(self, rosh, name, value):
+        return str(IPv6Address(value))
+
+class RoshIpCompleter():
+    def __new__(cls, *args, **kwargs):
+        if AF_INET in args:
+            return super().__new__(RoshIpv4Completer)
+
+        return super().__new__(RoshIpv6Completer)
+
+class RoshPfxv4Completer(DummyCompleter):
+    description = '{pfx}'
+
+    def parse_value(self, rosh, name, value):
+        return str(IPv4Network(value))
+
+class RoshPfxv6Completer(DummyCompleter):
+    description = '{pfxv6}'
+
+    def parse_value(self, rosh, name, value):
+        return str(IPv6Network(value))
+
+class RoshPfxCompleter():
+    def __new__(cls, *args, **kwargs):
+        if AF_INET in args:
+            return super().__new__(RoshPfxv4Completer)
+
+        return super().__new__(RoshPfxv6Completer)
+
+class RoshNeighFlagCompleter(RoshWordCompleter):
+    description = '{flags}'
+
+    def __init__(self):
+        super().__init__(neigh_flags.str2id.keys())
+
+    def lookup_id(self, rosh, flags):
+        return neigh_flags.lookup_id(flags)
+
+class RoshNeighStateCompleter(RoshWordCompleter):
+    description = '{state}'
+
+    def __init__(self):
+        super().__init__(neigh_states.str2id.keys())
+
+    def lookup_id(self, rosh, state):
+        return neigh_states.lookup_id(state)
+
+class RoshIfaFlagCompleter(RoshWordCompleter):
+    description = '{flag}'
+
+    def __init__(self):
+        super().__init__(ifa_flags.str2id.keys())
+
+    def lookup_id(self, rosh, flag):
+        return ifa_flags.lookup_id(flag)
+
 
 link_completer = RoshLinkCompleter()
 netns_completer = RoshNetNSCompleter()
-protos_completer = RoshProtoCompleter()
-realms_completer = RoshRealmCompleter()
-tables_completer = RoshTableCompleter()
-scopes_completer = RoshScopeCompleter()
+proto_completer = RoshProtoCompleter()
+realm_completer = RoshRealmCompleter()
+table_completer = RoshTableCompleter()
+scope_completer = RoshScopeCompleter()
+neighflag_completer = RoshNeighFlagCompleter()
+neighstate_completer = RoshNeighStateCompleter()
