@@ -1,8 +1,7 @@
 from socket import AF_INET6
-from prompt_toolkit.completion import DummyCompleter
 
 from rosh.commands import RoshCommand
-from rosh.completer import link_completer, RoshTuplesCompleter
+from rosh.completer import link_completer, protos_completer, RoshTuplesCompleter
 from rosh.output import RoshOutputTable
 
 class RoshShowIpv6NeighbourCommand(RoshCommand):
@@ -11,7 +10,7 @@ class RoshShowIpv6NeighbourCommand(RoshCommand):
     def __init__(self, rosh):
         self.subcommands = {
             'dev': link_completer,
-            'proto': DummyCompleter(),
+            'proto': protos_completer,
         }
         super().__init__(rosh, RoshTuplesCompleter(self.subcommands))
         self.family = AF_INET6

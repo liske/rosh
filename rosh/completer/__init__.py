@@ -4,6 +4,7 @@ from pyroute2 import netns, IPRoute
 import shlex
 
 from rosh.commands import RoshCommand
+from rosh.rtlookup import protos, realms, tables, scopes
 
 
 class RoshPeerCompleter(Completer):
@@ -39,7 +40,7 @@ class RoshTuplesCompleter(Completer):
 
         # build recursive completer
         for keyword, completer in tuples.items():
-            self.tuples[keyword] = RoshPeerCompleter(completer, self)
+            self.tuples[keyword] = completer
 
         # keyword completer
         self.keywords_completer = WordCompleter(tuples.keys())
@@ -69,6 +70,8 @@ class RoshTuplesCompleter(Completer):
             yield from self.keywords_completer.get_completions(document, complete_event)
 
 class RoshLinkCompleter(WordCompleter):
+    description = '{ifname}'
+
     def __init__(self):
         self.ipr = None
         super().__init__(self.get_links)
@@ -84,6 +87,8 @@ class RoshLinkCompleter(WordCompleter):
         return links
 
 class RoshNetNSCompleter(WordCompleter):
+    description = '{netns}'
+
     def __init__(self):
         super().__init__(self.get_netns)
 
@@ -93,5 +98,45 @@ class RoshNetNSCompleter(WordCompleter):
             l.append(shlex.quote(ns))
         return l
 
+class RoshProtoCompleter(WordCompleter):
+    description = '{proto}'
+
+    def __init__(self):
+        super().__init__(self.get_protos)
+
+    def get_protos(self):
+        return protos
+
+class RoshRealmCompleter(WordCompleter):
+    description = '{realm}'
+
+    def __init__(self):
+        super().__init__(self.get_realms)
+
+    def get_realms(self):
+        return realms
+
+class RoshScopeCompleter(WordCompleter):
+    description = '{scope}'
+
+    def __init__(self):
+        super().__init__(self.get_scopes)
+
+    def get_scopes(self):
+        return scopes
+
+class RoshTableCompleter(WordCompleter):
+    description = '{table}'
+
+    def __init__(self):
+        super().__init__(self.get_tables)
+
+    def get_tables(self):
+        return tables
+
 link_completer = RoshLinkCompleter()
 netns_completer = RoshNetNSCompleter()
+protos_completer = RoshProtoCompleter()
+realms_completer = RoshRealmCompleter()
+tables_completer = RoshTableCompleter()
+scopes_completer = RoshScopeCompleter()
