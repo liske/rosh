@@ -31,7 +31,7 @@ class RoshShowInterfaceCommand(RoshCommand):
         self.ethtool_command = RoshEthtoolCommand(rosh)
 
         if ethtool_exe is None:
-             completer = link_completer
+            completer = link_completer
         else:
             completer = RoshPeerCompleter(link_completer, WordCompleter(['', *self.ethtool_args.keys()]))
 
