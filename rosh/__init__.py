@@ -27,11 +27,11 @@ from rosh.validator import RoshValidator
 # terminal with restricted color and font support (linux, xterm, vt100)
 BASE_STYLE = Style.from_dict({
     '':             '',
-    'host':         '#fff bg:#209680',
-    'host_end':     '#209680',
-    'host_netns':   '#209680 bg:#aadd00',
-    'netns':        '#000 bg:#aadd00 bold',
-    'netns_end':    '#aadd00',
+    'host':         'ansiwhite bg:ansigreen',
+    'host_end':     'ansigreen',
+    'host_netns':   'ansigreen bg:ansiyellow',
+    'netns':        'ansiblack bg:ansiyellow bold',
+    'netns_end':    'ansiyellow',
 })
 BASE_SYMBOLS = SimpleNamespace(router='●', delimiter='◤')
 
