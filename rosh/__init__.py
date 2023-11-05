@@ -38,10 +38,10 @@ BASE_SYMBOLS = SimpleNamespace(router='●', delimiter='◤')
 # modern terminals (default)
 EXTENDED_STYLE = Style.from_dict({
     '':             '',
-    'host':         '#fff bg:#209680',
+    'host':         '#aadd00 bg:#209680',
     'host_end':     '#209680',
     'host_netns':   '#209680 bg:#aadd00',
-    'netns':        '#000 bg:#aadd00 bold',
+    'netns':        '#209680 bg:#aadd00 bold',
     'netns_end':    '#aadd00',
 })
 EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='')
