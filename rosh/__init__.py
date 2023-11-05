@@ -8,7 +8,7 @@ import os
 import pkgutil
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import NestedCompleter
+from prompt_toolkit.completion import NestedCompleter, WordCompleter
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import set_title
 from prompt_toolkit.styles import Style
@@ -21,7 +21,7 @@ from types import SimpleNamespace
 
 import rosh.commands
 from rosh.commands import RoshCommand
-from rosh.completer import link_completer
+from rosh.completer import link_completer, netns_completer, RoshPeerCompleter, RoshTuplesCompleter
 from rosh.validator import RoshValidator
 
 # terminal with restricted color and font support (linux, xterm, vt100)
@@ -103,11 +103,38 @@ class Rosh():
         '''
         Prints the available command hierarchy to the terminal.
         '''
+        def _get_description(completer):
+            description = getattr(completer, 'description', None)
+            # print(completer)
+            # print(description)
+            if description is None:
+                if isinstance(completer, WordCompleter):
+                    words = completer.words
+                    if callable(words):
+                        words = words()
+                    return ['[{}]'.format('|'.join(words))]
+                elif isinstance(completer, RoshPeerCompleter):
+                    return _get_description(completer.base_completer) + _get_description(completer.sub_completer)
+                elif isinstance(completer, RoshTuplesCompleter):
+                    descriptions = []
+                    for key, val in completer.tuples.items():
+                        descriptions.append(f'[{key} <{"|".join(_get_description(val))}>]')
+                    return descriptions
+            else:
+                return [description]
+
+            return []
+
         def _dump(indent, commands):
             for cmd, val in sorted(commands.items(), key=lambda x: x[0]):
                 if isinstance(val, RoshCommand):
                     description = getattr(val, 'description', '')
                     print("{}- {}".format(''.ljust(indent), cmd).ljust(20), description)
+                    if val.completer is not None:
+                        descriptions = _get_description(val.completer)
+                        if descriptions:
+                            description = ' '.join(descriptions)
+                            print("{}    {}".format(''.ljust(indent), description))
                 else:
                     print("{}- {}".format(''.ljust(indent), cmd))
                     _dump(indent+2, val)
