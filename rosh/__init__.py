@@ -2,9 +2,9 @@ __version__ = '0.0.1'
 
 import argparse
 from cachetools import cached, TTLCache
-from collections import namedtuple
 from fuzzyfinder import fuzzyfinder
 import importlib
+import os
 import pkgutil
 from prompt_toolkit import PromptSession
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -17,38 +17,60 @@ from setproctitle import setproctitle
 import shlex
 import socket
 import sys
+from types import SimpleNamespace
 
 import rosh.commands
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer
 from rosh.validator import RoshValidator
 
+BASE_STYLE = Style.from_dict({
+    # User input (default text).
+    '':             '',
+
+    # Prompt.
+    'host':         '#fff bg:#209680',
+    'host_end':     '#209680',
+    'host_netns':   '#209680 bg:#aadd00',
+    'netns':        '#000 bg:#aadd00 bold',
+    'netns_end':    '#aadd00',
+})
+BASE_SYMBOLS = SimpleNamespace(router='●', delimiter='◤')
+
+EXTENDED_STYLE = Style.from_dict({
+    # User input (default text).
+    '':             '',
+
+    # Prompt.
+    'host':         '#fff bg:#209680',
+    'host_end':     '#209680',
+    'host_netns':   '#209680 bg:#aadd00',
+    'netns':        '#000 bg:#aadd00 bold',
+    'netns_end':    '#aadd00',
+})
+EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='')
+
 class Rosh():
     def __init__(self):
         set_title("rosh@{}".format(socket.getfqdn()))
 
         self.session = None
-        self.ipr = IPRoute()
         self.commands = self.find_commands(rosh.commands)
 
-        style = Style.from_dict({
-            # User input (default text).
-            '':             '',
+        if os.environ.get('TERM') in ['linux', 'xterm', 'vt100']:
+            self.style = BASE_STYLE
+            self.symbols = BASE_SYMBOLS
+        else:
+            self.style = EXTENDED_STYLE
+            self.symbols = EXTENDED_SYMBOLS
 
-            # Prompt.
-            'host':         '#fff bg:#209680',
-            'host_end':     '#209680',
-            'host_netns':   '#209680 bg:#aadd00',
-            'netns':        '#000 bg:#aadd00 bold',
-            'netns_end':    '#aadd00',
-        })
-
+        self.ipr = IPRoute()
         self.session = PromptSession(self.ps1,
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
                     complete_while_typing=True,
                     reserve_space_for_menu=2,
-                    style=style,
+                    style=self.style,
                     validator=RoshValidator(self),
                     validate_while_typing=False,
         )
@@ -116,16 +138,16 @@ class Rosh():
 
         if getattr(value, 'netns', None) is not None:
             self.set_prompt([
-                ('class:host', f' ⬤ {hostname} '),
-                ('class:host_netns', ''),
+                ('class:host', f' {self.symbols.router} {hostname} '),
+                ('class:host_netns', f'{self.symbols.delimiter}'),
                 ('class:netns', f' {value.netns} '),
-                ('class:netns_end', ''),
+                ('class:netns_end', f'{self.symbols.delimiter}'),
                 ('', ' '),
             ])
         else:
             self.set_prompt([
-                ('class:host', f' ⬤ {hostname} '),
-                ('class:host_end', ''),
+                ('class:host', f' {self.symbols.router} {hostname} '),
+                ('class:host_end', f'{self.symbols.delimiter}'),
                 ('', ' '),
             ])
 
