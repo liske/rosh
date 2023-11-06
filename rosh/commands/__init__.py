@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from prompt_toolkit.application import run_in_terminal
 import os.path
 import pyroute2.netns
 import subprocess
@@ -64,26 +63,22 @@ class RoshSystemCommand(RoshCommand):
         self.exe = exe
 
     def handler(self, cmd, *args):
-        def _run():
-            print()
+        print()
 
+        if getattr(self.rosh.ipr, 'netns', None):
+            pyroute2.netns.pushns(self.rosh.ipr.netns)
+
+        try:
             try:
                 p = subprocess.Popen([self.cmd, *args], executable=self.exe)
                 p.wait()
             except KeyboardInterrupt:
                 p.terminate()
                 p.wait()
-
-            print()
-
-        if getattr(self.rosh.ipr, 'netns', None):
-            pyroute2.netns.pushns(self.rosh.ipr.netns)
-
-        try:
-            run_in_terminal(_run)
         finally:
             if getattr(self.rosh.ipr, 'netns', None):
                 pyroute2.netns.popns()
+        print()
 
     @abstractmethod
     def validate(self, cmd, args):
