@@ -54,7 +54,7 @@ class RoshTuplesCompleter(Completer):
             )
 
         # keyword completer
-        self.keywords_completer = WordCompleter(tuples.keys())
+        self.keywords_completer = WordCompleter(sorted(tuples.keys()))
 
     def get_completions(self, document, complete_event):
         # Split document.
@@ -111,7 +111,7 @@ class RoshLinkCompleter(RoshWordCompleter):
     def get_links(self):
         links = []
         if self.ipr is not None:
-            for link in self.ipr.get_links():
+            for link in sorted(self.ipr.get_links(), key=lambda x: x.get_attr('IFLA_IFNAME', x['index'])):
                 links.append(shlex.quote(link.get_attr('IFLA_IFNAME')))
         return links
 
@@ -126,7 +126,7 @@ class RoshNetNSCompleter(RoshWordCompleter):
 
     def get_netns(self):
         l = []
-        for ns in netns.listnetns():
+        for ns in sorted(netns.listnetns()):
             l.append(shlex.quote(ns))
         return l
 
@@ -137,7 +137,7 @@ class RoshProtoCompleter(RoshWordCompleter):
         super().__init__(self.get_protos)
 
     def get_protos(self):
-        return protos.str2id.keys()
+        return sorted(protos.str2id.keys())
 
     def lookup_id(self, rosh, proto):
         return protos.lookup_id(proto)
@@ -149,7 +149,7 @@ class RoshRealmCompleter(RoshWordCompleter):
         super().__init__(self.get_realms)
 
     def get_realms(self):
-        return realms.str2id.keys()
+        return sorted(realms.str2id.keys())
 
     def lookup_id(self, rosh, realm):
         return realms.lookup_id(realm)
@@ -161,7 +161,7 @@ class RoshScopeCompleter(RoshWordCompleter):
         super().__init__(self.get_scopes)
 
     def get_scopes(self):
-        return scopes.str2id.keys()
+        return sorted(scopes.str2id.keys())
 
     def lookup_id(self, rosh, scope):
         return scopes.lookup_id(scope)
@@ -173,7 +173,7 @@ class RoshTableCompleter(RoshWordCompleter):
         super().__init__(self.get_tables)
 
     def get_tables(self):
-        return tables.str2id.keys()
+        return sorted(tables.str2id.keys())
 
     def lookup_id(self, rosh, table):
         return tables.lookup_id(table)
@@ -220,7 +220,7 @@ class RoshNeighFlagCompleter(RoshWordCompleter):
     description = '{flags}'
 
     def __init__(self):
-        super().__init__(neigh_flags.str2id.keys())
+        super().__init__(sorted(neigh_flags.str2id.keys()))
 
     def lookup_id(self, rosh, flags):
         return neigh_flags.lookup_id(flags)
@@ -229,7 +229,7 @@ class RoshNeighStateCompleter(RoshWordCompleter):
     description = '{state}'
 
     def __init__(self):
-        super().__init__(neigh_states.str2id.keys())
+        super().__init__(sorted(neigh_states.str2id.keys()))
 
     def lookup_id(self, rosh, state):
         return neigh_states.lookup_id(state)
@@ -238,7 +238,7 @@ class RoshIfaFlagCompleter(RoshWordCompleter):
     description = '{flag}'
 
     def __init__(self):
-        super().__init__(ifa_flags.str2id.keys())
+        super().__init__(sorted(ifa_flags.str2id.keys()))
 
     def lookup_id(self, rosh, flag):
         return ifa_flags.lookup_id(flag)
