@@ -6,7 +6,7 @@ from rosh.commands import RoshSystemCommand
 traceroute_exe = shutil.which('traceroute')
 
 class RoshTracerouteCommand(RoshSystemCommand):
-    description = 'execute traceroute command'
+    description = 'run traceroute command'
 
     def __init__(self, rosh):
         super().__init__(rosh, traceroute_exe)

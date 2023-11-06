@@ -6,7 +6,7 @@ from rosh.commands import RoshSystemCommand
 telnet_exe = shutil.which('telnet')
 
 class RoshTelnetCommand(RoshSystemCommand):
-    description = 'execute telnet command'
+    description = 'run telnet command'
 
     def __init__(self, rosh):
         super().__init__(rosh, telnet_exe)

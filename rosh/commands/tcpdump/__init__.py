@@ -6,7 +6,7 @@ from rosh.commands import RoshSystemCommand
 tcpdump_exe = shutil.which('tcpdump')
 
 class RoshTcpdumpCommand(RoshSystemCommand):
-    description = 'execute tcpdump command'
+    description = 'run tcpdump command'
 
     def __init__(self, rosh):
         super().__init__(rosh, tcpdump_exe)
