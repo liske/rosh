@@ -8,6 +8,9 @@ Changes:
 - commands: improve command list layout 
 - completers: sort word lists
 
+Fixes:
+- commands: fix pushns regression for external commands
+
 ## 0.0.2 - 2023-11-05
 
 Changes:
