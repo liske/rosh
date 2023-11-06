@@ -41,12 +41,12 @@ class RoshShowIpv6RouteCommand(RoshTuplesCommand):
 
         for route in self.rosh.ipr.get_routes(family=self.family, **filter):
             try:
-                via = ip_address(route.get_attr('RTA_GATEWAY'))
+                via = str(ip_address(route.get_attr('RTA_GATEWAY')))
             except ValueError:
                 via = '-'
 
             tbl.add_row([
-                ip_network(route.get_attr('RTA_DST', '::' if self.family == AF_INET6 else '0.0.0.0') + '/' + str(route['dst_len'])),
+                str(ip_network(route.get_attr('RTA_DST', '::' if self.family == AF_INET6 else '0.0.0.0') + '/' + str(route['dst_len']))),
                 via,
                 self.rosh.idx_to_ifname(route.get_attr('RTA_OIF')),
                 route.get_attr('RTA_PRIORITY', '-'),
