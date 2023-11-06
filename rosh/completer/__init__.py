@@ -39,6 +39,7 @@ class RoshPeerCompleter(Completer):
 
 class RoshTuplesCompleter(Completer):
     def __init__(self, tuples):
+        self.flat_tuples = tuples
         self.tuples = {}
 
         # build recursive completer
