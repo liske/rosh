@@ -1,10 +1,10 @@
 # RoSh - Router Shell
 
-**WARNING** *This project is still in an early stage of development, and most of its intended function is missing!*
+## About
 
-This is a interactive diagnostic shell for (software|linux)-based routers. It's inspired by the CLI of network equipment (i.e. Cisco IOS) and implements simular diagnostic commands like the iproute2/bridge/ethtool/tc/wireguard commands.
+This is an interactive diagnostic shell for Linux-based routers. It is inspired by the CLI of classic network devices (e.g. Cisco IOS) and implements diagnostic functions similar to iproute2/bridge/ethtool/tc/wireguard. It is explicitly not intended for configuration changes, but to support the analysis of software routers by network engineers.
 
-![rosh demo](doc/demo.gif)
+![RoSh demo](doc/demo.gif)
 
 
 ## Commands
@@ -12,36 +12,39 @@ This is a interactive diagnostic shell for (software|linux)-based routers. It's 
 The following commands are available:
 
 ```
-- exit               exit from rosh
-- netns              change active netns namespace for subsequent commands
+exit               exit from rosh
+help               show command help
+netns              change active netns namespace for subsequent commands
+  {netns}
+ping               run ping command
+shell              launch a interactive system shell
+show
+  interface        show interface details
+    {ifname} [coalesce|driver|eee|features|module|pause|ring|settings|stats|tstamp]
+  ip
+    address        show assigned ipv4 addresses
+      [index <{ifname}>]
+    neighbour      show ipv4 neighbour cache entries (ARP)
+      [dst <{ip}>] [ifindex <{ifname}>] [state <{state}>]
+    route          show ipv4 routes
+      [dst <{pfx}>] [gateway <{ip}>] [oif <{ifname}>] [proto <{proto}>] [scope <{scope}>] [table <{table}>]
+    rule           show ipv4 routing policy rules
+      [dst <{pfx}>] [iif <{ifname}>] [oif <{ifname}>] [proto <{proto}>] [src <{pfx}>] [table <{table}>]
+  ipv6
+    address        show assigned ipv6 addresses
+      [index <{ifname}>]
+    neighbour      show ipv4 neighbour cache entries
+      [dst <{ipv6}>] [ifindex <{ifname}>] [state <{state}>]
+    route          show ipv6 routes
+      [dst <{pfxv6}>] [gateway <{ipv6}>] [oif <{ifname}>] [proto <{proto}>] [scope <{scope}>] [table <{table}>]
+    rule           show ipv6 routing policy rules
+      [dst <{pfxv6}>] [iif <{ifname}>] [oif <{ifname}>] [proto <{proto}>] [src <{pfxv6}>] [table <{table}>]
+  netns            show netns namespaces
     {netns}
-- ping               execute ping command
-- shell              launch a interactive system shell
-- show
-  - interface        show interface details
-      {ifname} [|settings|coalesce|driver|eee|features|module|pause|ring|stats|tstamp]
-  - ip
-    - address        show assigned ipv4 addresses
-        {ifname}
-    - neighbour      show ipv4 neighbour cache entries (ARP)
-        [dev <{ifname}>] [proto <{proto}>]
-    - route          show ipv4 routes
-    - rule           show ipv4 routing policy rules
-        {ifname}
-  - ipv6
-    - address        show assigned ipv6 addresses
-        {ifname}
-    - neighbour      show ipv4 neighbour cache entries
-        [dev <{ifname}>] [proto <{proto}>]
-    - route          show ipv6 routes
-    - rule           show ipv6 routing policy rules
-        {ifname}
-  - netns            show netns namespaces
-      {netns}
-- ssh                execute ssh command
-- tcpdump            execute tcpdump command
-- telnet             execute telnet command
-- traceroute         execute traceroute command
+ssh                run ssh command
+tcpdump            run tcpdump command
+telnet             run telnet command
+traceroute         run traceroute command
 ```
 
 ## Install
