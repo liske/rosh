@@ -1,5 +1,13 @@
 # ChangeLog
 
+## 0.1.0 - 2023-11-06
+
+Changes:
+- commands: add help command
+- commands: add show bridge fdb command
+- commands: improve command list layout 
+- completers: sort word lists
+
 ## 0.0.2 - 2023-11-05
 
 Changes:
