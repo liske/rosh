@@ -57,20 +57,29 @@ class RoshTuplesCommand(RoshCommand):
         return (None, None, kwargs)
 
 class RoshSystemCommand(RoshCommand):
-    def __init__(self, rosh, exe, completer=None):
+    def __init__(self, rosh, exe, completer=None, env=None):
         super().__init__(rosh, completer)
         self.cmd = os.path.basename(exe)
         self.exe = exe
+        self.env = env
 
     def handler(self, cmd, *args):
         print()
+
+        if callable(self.env):
+            env = self.env()
+        else:
+            env = self.env
 
         if getattr(self.rosh.ipr, 'netns', None):
             pyroute2.netns.pushns(self.rosh.ipr.netns)
 
         try:
             try:
-                p = subprocess.Popen([self.cmd, *args], executable=self.exe)
+                p = subprocess.Popen(
+                    [self.cmd, *args],
+                    executable=self.exe,
+                    env=env)
                 p.wait()
             except KeyboardInterrupt:
                 p.terminate()
