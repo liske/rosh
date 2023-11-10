@@ -6,10 +6,12 @@ from fuzzyfinder import fuzzyfinder
 import importlib
 import os
 import pkgutil
-from prompt_toolkit import PromptSession
+import platform
+from prompt_toolkit import PromptSession, print_formatted_text as print
+from prompt_toolkit.application.current import get_app_session
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter, WordCompleter
-from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import set_title
 from prompt_toolkit.styles import Style
 from pyroute2 import IPRoute
@@ -44,7 +46,7 @@ EXTENDED_STYLE = Style.from_dict({
     'netns':        '#209680 bg:#aadd00 bold',
     'netns_end':    '#aadd00',
 })
-EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='')
+EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='◤')
 
 class Rosh():
     '''
@@ -74,6 +76,23 @@ class Rosh():
                     validator=RoshValidator(self),
                     validate_while_typing=False,
         )
+
+        self.print_banner()
+
+    def print_banner(self):
+        uname = platform.uname()
+
+        lines = [
+            ('bold', f'{uname.system} {uname.node} {uname.release}'),
+            ('', f'Router Shell {__version__}'),
+        ]
+        size = get_app_session().output.get_size()
+
+        print()
+        for line in lines:
+            text = FormattedText([(line[0], line[1].center(size.columns))])
+            print(text)
+        print()
 
     def prompt_loop(self):
         '''
