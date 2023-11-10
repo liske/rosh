@@ -57,8 +57,8 @@ class RoshTuplesCommand(RoshCommand):
         return (None, None, kwargs)
 
 class RoshSystemCommand(RoshCommand):
-    def __init__(self, rosh, exe):
-        super().__init__(rosh)
+    def __init__(self, rosh, exe, completer=None):
+        super().__init__(rosh, completer)
         self.cmd = os.path.basename(exe)
         self.exe = exe
 
