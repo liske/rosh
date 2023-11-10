@@ -1,5 +1,15 @@
 # ChangeLog
 
+## 0.1.1 - 2023-11-11
+
+Changes:
+- commands: add lbu command
+- commands: set PS1 for shell command
+- prompt: add banner and update styling
+
+Fixes:
+- commands: fix exception if ethtool is missing
+
 ## 0.1.0 - 2023-11-06
 
 Changes:
