@@ -28,11 +28,11 @@ class RoshShowInterfaceCommand(RoshCommand):
             'stats': '-S',
             'tstamp': '-T',
         }
-        self.ethtool_command = RoshEthtoolCommand(rosh)
 
         if ethtool_exe is None:
             completer = link_completer
         else:
+            self.ethtool_command = RoshEthtoolCommand(rosh)
             completer = RoshPeerCompleter(link_completer, WordCompleter(['', *sorted(self.ethtool_args.keys())]))
 
         super().__init__(rosh, completer)
