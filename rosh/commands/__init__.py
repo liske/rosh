@@ -7,20 +7,36 @@ from rosh.output import RoshOutputDetails
 
 
 class RoshCommand():
-    def __init__(self, rosh, completer=None):
+    '''
+    Base class for commands.
+    '''
+    def __init__(self, rosh, completer=None, min_args=0):
         self.rosh = rosh
         self.completer = completer
         self.output = RoshOutputDetails()
+        self.min_args = min_args
 
     @abstractmethod
     def handler(self, cmd, *args):
         pass
 
-    @abstractmethod
     def validate(self, cmd, args):
+        if len(args) < self.min_args:
+            return (len(args), "missing argument")
+
+        if len(args) > 0:
+            if callable(getattr(self.completer, 'parse_value', None)):
+                try:
+                    self.completer.parse_value(self.rosh, None, args[0])
+                except ValueError as err:
+                    return (1, str(err))
+
         return (None, None)
 
 class RoshTuplesCommand(RoshCommand):
+    '''
+    Class for commands allowing named parameters (tuples).
+    '''
     def validate(self, cmd, args):
         (pos, msg, kwargs) = self.parse_args(cmd, args)
 
@@ -35,15 +51,15 @@ class RoshTuplesCommand(RoshCommand):
 
         for i in range(0, len(args), 2):
             if args[i] not in self.completer.tuples:
-                return (i, 'invalid filter name', None)
+                return (i, 'invalid parameter name', None)
 
             if args[i] in filters:
-                return (i, f'filter "{args[i]}" already applied', None)
+                return (i, f'parameter "{args[i]}" already applied', None)
 
             filters.append(args[0])
 
             if i + 1 == len(args):
-                return (i + 1, 'missing filter value', None)
+                return (i + 1, 'missing parameter value', None)
 
             value_completer = self.completer.tuples[args[i]]
             if getattr(value_completer, 'base_completer', None):
@@ -57,6 +73,9 @@ class RoshTuplesCommand(RoshCommand):
         return (None, None, kwargs)
 
 class RoshSystemCommand(RoshCommand):
+    '''
+    Class for system commands which calls a external binary like ping or traceroute.
+    '''
     def __init__(self, rosh, exe, completer=None, env=None):
         super().__init__(rosh, completer)
         self.cmd = os.path.basename(exe)
@@ -89,6 +108,5 @@ class RoshSystemCommand(RoshCommand):
                 pyroute2.netns.popns()
         print()
 
-    @abstractmethod
     def validate(self, cmd, args):
         return (None, None)
