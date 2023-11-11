@@ -1,5 +1,14 @@
 # ChangeLog
 
+## 0.1.2 - 2023-11-11
+
+Changes:
+- commands: add more ethtool details (channels, identify, priv-flags, tunnels)
+- commands: add mtr command
+- commands: add validation for simple commands
+- commands: add disable and enable command for interfaces
+- prompt: dump netns list on startup (if any)
+
 ## 0.1.1 - 2023-11-11
 
 Changes:
