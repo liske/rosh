@@ -18,15 +18,19 @@ class RoshShowInterfaceCommand(RoshCommand):
     def __init__(self, rosh):
         self.ethtool_args = {
             'settings': '-I',
+            'channels': '-l',
             'coalesce': '-c',
             'driver': '-i',
             'eee': '--show-eee',
             'features': '-k',
+            'identify': '-p',
             'module': '-m',
             'pause': '-a',
+            'priv-flags': '--show-priv-flags',
             'ring': '-g',
             'stats': '-S',
             'tstamp': '-T',
+            'tunnels': '--show-tunnels',
         }
 
         if ethtool_exe is None:
