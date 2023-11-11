@@ -14,7 +14,7 @@ from prompt_toolkit.completion import NestedCompleter, WordCompleter
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import set_title
 from prompt_toolkit.styles import Style
-from pyroute2 import IPRoute
+from pyroute2 import IPRoute, netns
 from setproctitle import setproctitle
 import shlex
 import socket
@@ -28,25 +28,27 @@ from rosh.validator import RoshValidator
 
 # terminal with restricted color and font support (linux, xterm, vt100)
 BASE_STYLE = Style.from_dict({
-    '':             '',
-    'host':         'ansiwhite bg:ansigreen',
-    'host_end':     'ansigreen',
-    'host_netns':   'ansigreen bg:ansiyellow',
-    'netns':        'ansiblack bg:ansiyellow bold',
-    'netns_end':    'ansiyellow',
+    '':              '',
+    'host':          'ansiwhite bg:ansigreen',
+    'host_end':      'ansigreen',
+    'host_netns':    'ansigreen bg:ansiyellow',
+    'netns':         'ansiblack bg:ansiyellow bold',
+    'netns_begin':   'bg:ansiyellow',
+    'netns_end':     'ansiyellow',
 })
-BASE_SYMBOLS = SimpleNamespace(router='●', delimiter='◤')
+BASE_SYMBOLS = SimpleNamespace(router='●', netns='▢', delimiter='◤')
 
 # modern terminals (default)
 EXTENDED_STYLE = Style.from_dict({
-    '':             '',
-    'host':         '#aadd00 bg:#209680',
-    'host_end':     '#209680',
-    'host_netns':   '#209680 bg:#aadd00',
-    'netns':        '#209680 bg:#aadd00 bold',
-    'netns_end':    '#aadd00',
+    '':              '',
+    'host':          '#aadd00 bg:#209680',
+    'host_end':      '#209680',
+    'host_netns':    '#209680 bg:#aadd00',
+    'netns':         '#209680 bg:#aadd00 bold',
+    'netns_begin':   'bg:#aadd00',
+    'netns_end':     '#aadd00',
 })
-EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', delimiter='◤')
+EXTENDED_SYMBOLS = SimpleNamespace(router='⬤', netns='▢', delimiter='◤')
 
 class Rosh():
     '''
@@ -80,6 +82,9 @@ class Rosh():
         self.print_banner()
 
     def print_banner(self):
+        '''
+        Print startup shell banner.
+        '''
         uname = platform.uname()
 
         lines = [
@@ -91,7 +96,36 @@ class Rosh():
         print()
         for line in lines:
             text = FormattedText([(line[0], line[1].center(size.columns))])
-            print(text)
+            print(text, style=self.style)
+        print()
+
+        self.print_netns_brief()
+
+    def print_netns_brief(self):
+        '''
+        Print a brief list of NetNS on startup (if allowed).
+        '''
+        try:
+            items = []
+            length = 0
+            for ns in sorted(netns.listnetns()):
+                items.append(FormattedText([
+                    ('class:netns', f' {self.symbols.netns} {ns} '),
+                    ('class:netns_end', self.symbols.delimiter),
+                ]))
+                length += len(ns) + 5
+        except PermissionError:
+            return
+
+        if len(items) == 0:
+            return
+
+        size = get_app_session().output.get_size()
+
+        print(' '.ljust(int((size.columns - length)/2) - len(items)), end='')
+        for text in items:
+            print(' ', text, style=self.style, end='')
+        print()
         print()
 
     def prompt_loop(self):
@@ -190,7 +224,7 @@ class Rosh():
             self.set_prompt([
                 ('class:host', f' {self.symbols.router} {hostname} '),
                 ('class:host_netns', f'{self.symbols.delimiter}'),
-                ('class:netns', f' {value.netns} '),
+                ('class:netns', f'{self.symbols.netns} {value.netns} '),
                 ('class:netns_end', f'{self.symbols.delimiter}'),
                 ('', ' '),
             ])
