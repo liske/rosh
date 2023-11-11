@@ -12,15 +12,26 @@ This is an interactive diagnostic shell for Linux-based routers. It is inspired 
 The following commands are available:
 
 ```
+disable
+  interface        disable (shutdown) an interface
+    {ifname}
+enable
+  interface        enable (no shutdown) an interface
+    {ifname}
 exit               exit from rosh
 help               show command help
+lbu                run lbu command
+mtr                run mtr command
 netns              change active netns namespace for subsequent commands
   {netns}
 ping               run ping command
 shell              launch a interactive system shell
 show
+  bridge
+    fdb            show bridge forwarding database
+      [dst <{ipv6}>] [ifindex <{ifname}>] [state <{state}>]
   interface        show interface details
-    {ifname} [coalesce|driver|eee|features|module|pause|ring|settings|stats|tstamp]
+    {ifname} [channels|coalesce|driver|eee|features|identify|module|pause|priv-flags|ring|settings|stats|tstamp|tunnels]
   ip
     address        show assigned ipv4 addresses
       [index <{ifname}>]
