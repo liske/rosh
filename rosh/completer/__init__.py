@@ -119,6 +119,15 @@ class RoshLinkCompleter(RoshWordCompleter):
     def lookup_id(self, rosh, ifname):
         return rosh.ifname_to_idx(ifname)
 
+class RoshPhyLinkCompleter(RoshLinkCompleter):
+    def get_links(self):
+        links = []
+        if self.ipr is not None:
+            for link in sorted(self.ipr.get_links(), key=lambda x: x.get_attr('IFLA_IFNAME', x['index'])):
+                if link.get_attr('IFLA_PARENT_DEV_BUS_NAME') is not None:
+                    links.append(shlex.quote(link.get_attr('IFLA_IFNAME')))
+        return links
+
 class RoshNetNSCompleter(RoshWordCompleter):
     description = '{netns}'
 
@@ -246,6 +255,7 @@ class RoshIfaFlagCompleter(RoshWordCompleter):
 
 
 link_completer = RoshLinkCompleter()
+phy_link_completer = RoshPhyLinkCompleter()
 netns_completer = RoshNetNSCompleter()
 proto_completer = RoshProtoCompleter()
 realm_completer = RoshRealmCompleter()

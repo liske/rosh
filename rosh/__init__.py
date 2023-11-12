@@ -23,7 +23,7 @@ from types import SimpleNamespace
 
 import rosh.commands
 from rosh.commands import RoshCommand
-from rosh.completer import link_completer, netns_completer, RoshPeerCompleter, RoshTuplesCompleter
+from rosh.completer import link_completer, netns_completer, phy_link_completer, RoshPeerCompleter, RoshTuplesCompleter
 from rosh.validator import RoshValidator
 
 # terminal with restricted color and font support (linux, xterm, vt100)
@@ -217,6 +217,7 @@ class Rosh():
         self.cache_ifname_to_idx = TTLCache(maxsize=32, ttl=20)
 
         link_completer.ipr = value
+        phy_link_completer.ipr = value
 
         hostname = socket.gethostname() or localhost
 
