@@ -1,5 +1,12 @@
 # ChangeLog
 
+## 0.1.3 - 2023-11-12
+
+Changes:
+- commands: make tables more compact
+- commands: improve validation
+- commands: add ethtool --reset and --negotiate commands
+
 ## 0.1.2 - 2023-11-11
 
 Changes:

@@ -25,6 +25,12 @@ mtr                run mtr command
 netns              change active netns namespace for subsequent commands
   {netns}
 ping               run ping command
+renegotiate
+  interface        restart auto-negotiate on an interface
+    {ifname}
+reset
+  interface        reset an interface
+    {ifname} <flags|mgmt|irq|dma|filter|offload|mac|phy|ram|dedicated|all>
 shell              launch a interactive system shell
 show
   bridge
