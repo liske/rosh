@@ -76,8 +76,8 @@ class RoshSystemCommand(RoshCommand):
     '''
     Class for system commands which calls a external binary like ping or traceroute.
     '''
-    def __init__(self, rosh, exe, completer=None, env=None):
-        super().__init__(rosh, completer)
+    def __init__(self, rosh, exe, completer=None, env=None, min_args=0):
+        super().__init__(rosh, completer, min_args)
         self.cmd = os.path.basename(exe)
         self.exe = exe
         self.env = env
@@ -107,6 +107,3 @@ class RoshSystemCommand(RoshCommand):
             if getattr(self.rosh.ipr, 'netns', None):
                 pyroute2.netns.popns()
         print()
-
-    def validate(self, cmd, args):
-        return (None, None)
