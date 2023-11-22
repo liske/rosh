@@ -92,7 +92,7 @@ class Rosh():
         self.config = configparser.ConfigParser()
         self.config['prompt'] = {
             'complete_while_typing': True,
-            'complete_style': 'COLUMN',
+            'complete_style': 'READLINE_LIKE',
             'reserve_space_for_menu': -1,
         }
 
