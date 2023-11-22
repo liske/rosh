@@ -2,6 +2,7 @@ __version__ = '0.1.3'
 
 import argparse
 from cachetools import cached, TTLCache
+import configparser
 from fuzzyfinder import fuzzyfinder
 import importlib
 import os
@@ -12,7 +13,7 @@ from prompt_toolkit.application.current import get_app_session
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import NestedCompleter, WordCompleter
 from prompt_toolkit.formatted_text import FormattedText
-from prompt_toolkit.shortcuts import set_title
+from prompt_toolkit.shortcuts import set_title, CompleteStyle
 from prompt_toolkit.styles import Style
 from pyroute2 import IPRoute, netns
 from setproctitle import setproctitle
@@ -55,11 +56,12 @@ class Rosh():
     This is the main class of RoSh providing the prompt-toolkit
     PromptSession.
     '''
-    def __init__(self):
+    def __init__(self, config_file):
         set_title("rosh@{}".format(socket.getfqdn()))
 
         self.session = None
         self.commands = self.find_commands(rosh.commands)
+        self.configure(config_file)
 
         if os.environ.get('TERM') in ['linux', 'xterm', 'vt100']:
             self.style = BASE_STYLE
@@ -72,14 +74,45 @@ class Rosh():
         self.session = PromptSession(self.ps1,
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
-                    complete_while_typing=True,
-                    reserve_space_for_menu=2,
+                    complete_while_typing=self.config.getboolean('prompt', 'complete_while_typing'),
+                    complete_style=self.config['prompt']['complete_style'],
+                    reserve_space_for_menu=self.config.getint('prompt', 'reserve_space_for_menu'),
                     style=self.style,
                     validator=RoshValidator(self),
                     validate_while_typing=False,
         )
 
         self.print_banner()
+
+
+    def configure(self, config_file):
+        '''
+        Set default config and load user configuration from file.
+        '''
+        self.config = configparser.ConfigParser()
+        self.config['prompt'] = {
+            'complete_while_typing': True,
+            'complete_style': 'COLUMN',
+            'reserve_space_for_menu': -1,
+        }
+
+        # read user config
+        self.config.read(config_file)
+
+        # sanity checks & auto settings
+        complete_style = self.config['prompt']['complete_style']
+        if not complete_style in ['COLUMN', 'MULTI_COLUMN', 'READLINE_LIKE']:
+            complete_style = 'COLUMN'
+            self.config['prompt']['complete_style'] = complete_style
+
+        reserve_space_for_menu = self.config.getint('prompt', 'reserve_space_for_menu')
+        if reserve_space_for_menu == -1:
+            if complete_style == 'READLINE_LIKE':
+                reserve_space_for_menu = 0
+            else:
+                reserve_space_for_menu = 4
+            self.config['prompt']['reserve_space_for_menu'] = str(reserve_space_for_menu)
+
 
     def print_banner(self):
         '''
@@ -195,6 +228,12 @@ class Rosh():
 
         print("available commands:")
         _dump(0, self.commands)
+
+    def dump_config(self):
+        '''
+        Prints the parsed configuration values.
+        '''
+        self.config.write(sys.stdout)
 
     @property
     def ipr(self):
@@ -368,13 +407,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
                     version='%(prog)s {version}'.format(version=__version__))
+    parser.add_argument('-c', dest='config', default='/etc/rosh.ini', required=False, help='configuration filename')
 
     subparsers = parser.add_subparsers(
         dest='action', required=False, help="specifies the action to perform")
 
     action_parsers = {
-        'shell': subparsers.add_parser('shell', help='run interactive shell (default)'),
         'commands': subparsers.add_parser('commands', help='dump available commands'),
+        'config': subparsers.add_parser('config', help='dump parsed configuration'),
+        'shell': subparsers.add_parser('shell', help='run interactive shell (default)'),
     }
 
     args = parser.parse_args()
@@ -382,11 +423,13 @@ def main():
 
     assert action in action_parsers
 
-    rosh = Rosh()
+    rosh = Rosh(args.config)
     if action == 'shell':
         rosh.prompt_loop()
     elif action == 'commands':
         rosh.dump_commands()
+    elif action == 'config':
+        rosh.dump_config()
 
 if __name__ == "__main__":
     main()
