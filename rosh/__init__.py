@@ -334,12 +334,28 @@ class Rosh():
         - the command name that matched
         - additional command parameters
         '''
+        def _abbrev_cmd(commands):
+            abbreviations = {}
+            for command in commands.keys():
+                for i in range(1, len(command)):
+                    cmd = command[:i]
+                    if len(list(filter(lambda x: x.startswith(cmd), commands))) == 1:
+                        abbreviations[cmd] = commands[command]
+            return abbreviations
+
         def _get_cmd(depth, commands, command='', *args):
             if command in commands:
                 if isinstance(commands[command], dict):
                     return _get_cmd(depth + 1, commands[command], *args)
                 elif isinstance(commands[command], RoshCommand):
                     return (depth, commands[command], command, args)
+            else:
+                abbreviations = _abbrev_cmd(commands)
+                if command in abbreviations:
+                    if isinstance(abbreviations[command], dict):
+                        return _get_cmd(depth + 1, abbreviations[command], *args)
+                    elif isinstance(abbreviations[command], RoshCommand):
+                        return (depth, abbreviations[command], command, args)
 
             return (depth, None, command, args)
 
