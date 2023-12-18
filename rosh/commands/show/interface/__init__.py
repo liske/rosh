@@ -24,7 +24,6 @@ class RoshShowInterfaceCommand(RoshCommand):
             'driver': '-i',
             'eee': '--show-eee',
             'features': '-k',
-            'identify': '-p',
             'module': '-m',
             'pause': '-a',
             'priv-flags': '--show-priv-flags',
