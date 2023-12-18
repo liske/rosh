@@ -20,7 +20,9 @@ enable
     {ifname}
 exit               exit from rosh
 help               show command help
-lbu                run lbu command
+identify
+  interface        initiate the adapter identify by sight procedure
+    {ifname}
 mtr                run mtr command
 netns              change active netns namespace for subsequent commands
   {netns}
@@ -37,7 +39,7 @@ show
     fdb            show bridge forwarding database
       [dst <{ipv6}>] [ifindex <{ifname}>] [state <{state}>]
   interface        show interface details
-    {ifname} [channels|coalesce|driver|eee|features|identify|module|pause|priv-flags|ring|settings|stats|tstamp|tunnels]
+    {ifname} [channels|coalesce|driver|eee|features|module|pause|priv-flags|ring|settings|stats|tstamp|tunnels]
   ip
     address        show assigned ipv4 addresses
       [index <{ifname}>]
