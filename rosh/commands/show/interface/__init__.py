@@ -1,4 +1,5 @@
 from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.application.current import get_app_session
 import shutil
 
 from rosh.commands import RoshCommand, RoshSystemCommand
@@ -51,14 +52,17 @@ class RoshShowInterfaceCommand(RoshCommand):
 
     def handler_brief(self):
         tbl = RoshOutputTable()
-        tbl.field_names = ['idx', 'ifname', 'kind', 'admin', 'oper', 'carrier']
+        tbl.field_names = ['idx', 'ifname', 'kind', 'alias', 'admin', 'oper', 'carrier']
         tbl.align['idx'] = 'r'
         tbl.align['ifname'] = 'l'
+        size = get_app_session().output.get_size()
+        tbl.max_width['alias'] = size.columns - 64
         tbl.sortby = 'ifname'
 
         for link in self.rosh.ipr.get_links():
             ifname = link.get_attr('IFLA_IFNAME')
             kind = link.get_attr('IFLA_PARENT_DEV_BUS_NAME', '-')
+            alias = link.get_attr('IFLA_IFALIAS', '')
             link_info = link.get_attr('IFLA_LINKINFO')
 
             if link_info is not None:
@@ -69,6 +73,7 @@ class RoshShowInterfaceCommand(RoshCommand):
                 link['index'],
                 ifname,
                 kind,
+                alias,
                 link['state'],
                 link.get_attr('IFLA_OPERSTATE').lower(),
                 'up' if link.get_attr('IFLA_CARRIER') else 'down',
@@ -152,7 +157,12 @@ class RoshShowInterfaceCommand(RoshCommand):
     def print_link_device(self, link):
         device = {
             'index': link['index'],
+            'name': link.get_attr('IFLA_IFNAME'),
         }
+
+        alias = link.get_attr('IFLA_IFALIAS')
+        if alias is not None:
+            device['alias'] = alias
 
         link_info = link.get_attr('IFLA_LINKINFO')
 
