@@ -1,5 +1,14 @@
 # ChangeLog
 
+## 0.1.4 - 2023-12-18
+
+Changes:
+- commands: add ifalias output for show interface
+- commands: move ethtool --identify into dedicated command
+- config: add config file support
+- prompt: allow command abbreviation
+- prompt: set default completion style from COLUMN to READLINE_LIKE
+
 ## 0.1.3 - 2023-11-12
 
 Changes:
