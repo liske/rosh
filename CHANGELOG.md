@@ -1,5 +1,11 @@
 # ChangeLog
 
+## 0.1.5 - 2023-12-23
+
+Changes:
+- commands: add ifstatecli command
+- doc: add commented default configuration
+
 ## 0.1.4 - 2023-12-18
 
 Changes:
