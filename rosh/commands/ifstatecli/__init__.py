@@ -7,7 +7,7 @@ from rosh.commands import RoshSystemCommand
 ifstatecli_exe = shutil.which('ifstatecli')
 
 class RoshIfstateCommand(RoshSystemCommand):
-    description = 'run lbu command'
+    description = 'run ifstatecli command'
 
     def __init__(self, rosh):
         completer = WordCompleter([
