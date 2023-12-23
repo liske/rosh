@@ -23,6 +23,10 @@ help               show command help
 identify
   interface        initiate the adapter identify by sight procedure
     {ifname}
+ifstatecli         run ifstatecli command
+  <apply|check|shell|show|showall>
+lbu                run lbu command
+  <commit|ci|diff|exclude|include|list|ls|list-backup|lb|package|pkg|revert|status|st>
 mtr                run mtr command
 netns              change active netns namespace for subsequent commands
   {netns}
