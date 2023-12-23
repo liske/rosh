@@ -60,6 +60,15 @@ class Rosh():
         set_title("rosh@{}".format(socket.getfqdn()))
 
         self.session = None
+
+        # initialize default config
+        self.config = configparser.ConfigParser()
+        self.config['prompt'] = {
+            'complete_while_typing': True,
+            'complete_style': 'READLINE_LIKE',
+            'reserve_space_for_menu': -1,
+        }
+
         self.commands = self.find_commands(rosh.commands)
         self.configure(config_file)
 
@@ -87,14 +96,8 @@ class Rosh():
 
     def configure(self, config_file):
         '''
-        Set default config and load user configuration from file.
+        Load user configuration from file.
         '''
-        self.config = configparser.ConfigParser()
-        self.config['prompt'] = {
-            'complete_while_typing': True,
-            'complete_style': 'READLINE_LIKE',
-            'reserve_space_for_menu': -1,
-        }
 
         # read user config
         self.config.read(config_file)
