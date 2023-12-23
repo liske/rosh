@@ -1,4 +1,4 @@
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 import argparse
 from cachetools import cached, TTLCache
@@ -426,7 +426,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version',
                     version='%(prog)s {version}'.format(version=__version__))
-    parser.add_argument('-c', dest='config', default='/etc/rosh.ini', required=False, help='configuration filename')
+    parser.add_argument('-c', dest='config', default='/etc/rosh.conf', required=False, help='configuration filename')
 
     subparsers = parser.add_subparsers(
         dest='action', required=False, help="specifies the action to perform")
