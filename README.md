@@ -72,6 +72,12 @@ traceroute         run traceroute command
 
 ## Install
 
+### Alpine Linux
+
+RoSh is available in the community repository of [Alpine Linux edge](https://pkgs.alpinelinux.org/packages?name=rosh).
+
+### PyPi
+
 RoSh is available at [PyPi](https://pypi.org/project/rosh/) and can be installed via `pip`:
 
 ```
