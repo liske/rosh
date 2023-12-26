@@ -18,19 +18,14 @@ class RoshValidator(Validator):
 
         # no command found
         if not command:
-            partial = shlex.join(cmd[:depth-1])
-            cursor = len(partial)
-
             if depth > len(cmd):
                 raise ValidationError(
                     message='command incomplete',
-                    cursor_position=cursor,
+                    cursor_position=len(document.text),
                 )
             else:
-                if cursor > 0:
-                    cursor += 1
-                partial += ' '
-                partial += shlex.quote(cmd[depth-1])
+                partial = shlex.join(cmd[:depth])
+                cursor = len(partial)
 
                 raise ValidationError(
                     message='Unknown command: {}'.format(partial),
@@ -40,10 +35,8 @@ class RoshValidator(Validator):
         # check command param
         (pos, message) = command.validate(arg0, args)
         if pos is not None:
-            partial = shlex.join(cmd[:depth + pos])
+            partial = shlex.join(cmd[:depth + pos + 1])
             cursor = len(partial)
-            if cursor > 0:
-                cursor += 1
 
             raise ValidationError(
                 message=message,
