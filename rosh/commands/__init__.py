@@ -6,7 +6,7 @@ import subprocess
 from rosh.output import RoshOutputDetails
 
 
-class RoshCommand():
+class RoshCommand(ABC):
     '''
     Base class for commands.
     '''
