@@ -17,7 +17,7 @@ class RoshCommand(ABC):
         self.min_args = min_args
 
     @abstractmethod
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         pass
 
     def validate(self, cmd, args):
@@ -82,7 +82,7 @@ class RoshSystemCommand(RoshCommand):
         self.exe = exe
         self.env = env
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         print()
 
         if callable(self.env):

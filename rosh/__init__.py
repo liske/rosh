@@ -25,6 +25,7 @@ from types import SimpleNamespace
 import rosh.commands
 from rosh.commands import RoshCommand
 from rosh.completer import link_completer, netns_completer, phy_link_completer, RoshPeerCompleter, RoshTuplesCompleter
+from rosh.filters import RoshFilter
 from rosh.validator import RoshValidator
 
 # terminal with restricted color and font support (linux, xterm, vt100)
@@ -70,6 +71,7 @@ class Rosh():
         }
 
         self.commands = self.find_commands(rosh.commands)
+        self.filters = self.find_filters(rosh.filters)
         self.configure(config_file)
 
         if os.environ.get('TERM') in ['linux', 'xterm', 'vt100']:
@@ -164,6 +166,23 @@ class Rosh():
         print()
         print()
 
+    def parse_filters(self, cmd):
+        filters = []
+
+        # get filters if there is a pipe symbol
+        if '|' in cmd:
+            # split cmd by pipe symbol
+            while '|' in cmd:
+                idx = cmd.index('|')
+                filters.append(cmd[:idx])
+                cmd = cmd[idx+1:]
+            filters.append(cmd)
+
+            # shift first filter, this is the cmd
+            cmd = filters.pop(0)
+
+        return (cmd, filters)
+
     def prompt_loop(self):
         '''
         Main REPL loop, will never return.
@@ -182,13 +201,40 @@ class Rosh():
             if len(cmd) == 0:
                 continue
 
-            (depth, command, arg0, args) = self.get_command(*cmd)
+            # split command line by pipe symbols
+            (cmd, flts) = self.parse_filters(cmd)
+
+            # skip when there is no command
+            if len(cmd) == 0:
+                continue
+
+            # get command
+            (depth, command, cmd_arg0, cmd_args) = self.get_command(*cmd)
             if not command:
                 print("ERR: unknown command")
-            else:
-                command.handler(arg0, *args)
+                continue
 
-    def dump_commands(self):
+            # get filters
+            filters_ok = True
+            filters = None
+            for flt in flts:
+                (filt, flt_arg0, flt_args) = self.get_filter(*flt)
+                if not filt:
+                    print("ERR: unknown filter")
+                    filters_ok = False
+                    break
+
+                if filters is None:
+                    filters = []
+
+                filters.append(filt(self, flt_arg0, *flt_args))
+
+            if not filters_ok:
+                continue
+
+            command.handler(filters, cmd_arg0, *cmd_args)
+
+    def dump_commands(self, filters=None):
         '''
         Prints the available command hierarchy to the terminal.
         '''
@@ -217,20 +263,44 @@ class Rosh():
 
         def _dump(indent, commands):
             for cmd, val in sorted(commands.items(), key=lambda x: x[0]):
-                if isinstance(val, RoshCommand):
+                if isinstance(val, RoshCommand) or isinstance(val, RoshFilter):
                     description = getattr(val, 'description', '')
-                    print("{}{}".format(''.ljust(indent), cmd).ljust(18), description)
+
+                    lines = [
+                        "{}{}".format(
+                            "{}{}".format(''.ljust(indent), cmd).ljust(18),
+                            description
+                        )
+                    ]
                     if val.completer is not None:
                         descriptions = _get_description(val.completer)
                         if descriptions:
                             description = ' '.join(descriptions)
-                            print("{}  {}".format(''.ljust(indent), description))
+                            lines.append("{}  {}".format(''.ljust(indent), description))
+                    if RoshFilter.filter_test_list(filters, lines):
+                        for line in lines:
+                            print(line)
                 else:
-                    print("{}{}".format(''.ljust(indent), cmd))
-                    _dump(indent+2, val)
+                    line = "{}{}".format(''.ljust(indent), cmd)
+                    if RoshFilter.filter_test_item(filters, line):
+                        print(line)
+                        _dump(indent+2, val)
 
         print("available commands:")
-        _dump(0, self.commands)
+        _dump(2, self.commands)
+
+        print()
+        print("available filters:")
+        for filt, flt in sorted(self.filters.items()):
+            description = getattr(flt, 'description', '')
+
+            line = "{}{}".format(
+                "  {}".format(filt).ljust(18),
+                description
+            )
+
+            if RoshFilter.filter_test_item(filters, line):
+                print(line)
 
     def dump_config(self):
         '''
@@ -363,6 +433,64 @@ class Rosh():
             return (depth, None, command, args)
 
         return _get_cmd(1, self.commands, command, *args)
+
+    def find_filters(self, ns_pkg):
+        '''
+        Finds packages in a namespace which have a `is_filter`
+        attribute set to `True`, recursively.
+        '''
+        filters = {}
+        strip = len(ns_pkg.__name__) + 1
+
+        for finder, name, ispkg in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
+            module = importlib.import_module(name)
+
+            is_filter = False
+            try:
+                is_filter = module.is_rosh_filter
+            except AttributeError:
+                pass
+
+            childs = self.find_filters(module)
+
+            if is_filter:
+                if childs:
+                    filters[name[strip:]] = {
+                        '': module.rosh_filter
+                    }
+                    filters[name[strip:]].update(childs)
+                else:
+                    filters[name[strip:]] = module.rosh_filter
+            elif childs:
+                filters[name[strip:]] = childs
+
+        return filters
+
+    def get_filter(self, filt, *args):
+        '''
+        Searches the flat internal filters dict searching for the
+        filter and returns a tuple:
+        - the RoshFilter that matched (or None)
+        - the filter name that matched
+        - additional filter parameters
+        '''
+        def _abbrev_flt():
+            abbreviations = {}
+            for filt in self.filters.keys():
+                for i in range(1, len(filt)):
+                    flt = filt[:i]
+                    if len(list(filter(lambda x: x.startswith(flt), self.filters))) == 1:
+                        abbreviations[flt] = self.filters[filt]
+            return abbreviations
+
+        if filt in self.filters:
+            return (self.filters[filt], filt, args)
+        else:
+            abbreviations = _abbrev_flt()
+            if filt in abbreviations:
+                return (abbreviations[filt], filt, args)
+
+        return (None, filt, args)
 
     def set_prompt(self, prompt):
         '''

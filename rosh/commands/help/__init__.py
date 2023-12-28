@@ -9,8 +9,8 @@ class RoshHelpCommand(RoshCommand):
     def __init__(self, rosh):
         super().__init__(rosh)
 
-    def handler(self, cmd, *args):
-        self.rosh.dump_commands()
+    def handler(self, filters, cmd, *args):
+        self.rosh.dump_commands(filters)
 
 is_rosh_command = True
 rosh_command = RoshHelpCommand

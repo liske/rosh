@@ -10,7 +10,7 @@ class RoshShowNetnsCommand(RoshCommand):
     def __init__(self, rosh):
         super().__init__(rosh, netns_completer)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         tbl = RoshOutputTable()
         tbl.field_names = ['NetNS']
         tbl.align = 'l'

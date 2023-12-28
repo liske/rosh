@@ -3,7 +3,7 @@ from rosh.commands import RoshCommand
 class RoshExitCommand(RoshCommand):
     description = "exit from rosh"
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         exit(0)
 
     def validate(self, cmd, args):

@@ -21,7 +21,7 @@ class RoshShowIpv6AddressCommand(RoshTuplesCommand):
 
         super().__init__(rosh, completer)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         (pos, msg, kwargs) = self.parse_args(cmd, args)
 
         assert pos is None

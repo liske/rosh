@@ -20,7 +20,7 @@ except ImportError:
 class RoshShowIfstateConfigCommand(RoshCommand):
     description = "show ifstate's config file"
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         config_args = []
 
         config_file = self.rosh.config['command.ifstatecli'].get('config_file')

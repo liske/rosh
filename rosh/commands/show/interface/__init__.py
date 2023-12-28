@@ -4,6 +4,7 @@ import shutil
 
 from rosh.commands import RoshCommand, RoshSystemCommand
 from rosh.completer import link_completer, RoshPeerCompleter
+from rosh.filters import RoshFilter
 from rosh.output import RoshOutputTable
 
 
@@ -41,15 +42,15 @@ class RoshShowInterfaceCommand(RoshCommand):
 
         super().__init__(rosh, completer)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         if len(args) == 0:
-            self.handler_brief()
+            self.handler_brief(filters)
         elif len(args) == 1:
-            self.handler_iface(args[0])
+            self.handler_iface(filters, args[0])
         elif len(args) == 2:
-            self.handler_ethtool(args[0], args[1])
+            self.handler_ethtool(filters, args[0], args[1])
 
-    def handler_brief(self):
+    def handler_brief(self, filters):
         tbl = RoshOutputTable()
         tbl.field_names = ['idx', 'ifname', 'kind', 'alias', 'admin', 'oper', 'carrier']
         tbl.align['idx'] = 'r'
@@ -67,8 +68,7 @@ class RoshShowInterfaceCommand(RoshCommand):
             if link_info is not None:
                 kind = link_info.get_attr('IFLA_INFO_KIND')
 
-
-            tbl.add_row([
+            row = [
                 link['index'],
                 ifname,
                 kind,
@@ -76,7 +76,10 @@ class RoshShowInterfaceCommand(RoshCommand):
                 link['state'],
                 link.get_attr('IFLA_OPERSTATE').lower(),
                 'up' if link.get_attr('IFLA_CARRIER') else 'down',
-            ])
+            ]
+
+            if RoshFilter.filter_test_list(filters, row):
+                tbl.add_row(row)
         print(tbl)
 
     def handler_iface(self, ifname):

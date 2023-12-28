@@ -34,7 +34,7 @@ class RoshResetInterfaceCommand(RoshSystemCommand):
         )
         super().__init__(rosh, ethtool_exe, completer, min_args=2)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         super().handler(cmd, '--reset', *args)
 
 is_rosh_command = ethtool_exe is not None

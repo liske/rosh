@@ -8,9 +8,15 @@ class RoshValidator(Validator):
         self.rosh = rosh
 
     def validate(self, document):
-        cmd = shlex.split(document.text)
+        text = shlex.split(document.text)
 
         # skip empty input
+        if len(text) == 0:
+            return
+
+        (cmd, filters) = self.rosh.parse_filters(text)
+
+        # skip when there is no command
         if len(cmd) == 0:
             return
 
@@ -42,3 +48,28 @@ class RoshValidator(Validator):
                 message=message,
                 cursor_position=cursor,
             )
+
+        # check filters
+        if filters:
+            for filt in filters:
+                # get filter class
+                (flt, arg0, args) = self.rosh.get_filter(*filt)
+
+                if not flt:
+                    partial = shlex.join(text[:len(cmd) + 3])
+                    raise ValidationError(
+                        message='Unknown filter: {}'.format(arg0),
+                        cursor_position=len(partial),
+                    )
+
+                # validate filter input
+                (pos, message) = flt.validate(self.rosh, arg0, args)
+
+                if pos is not None:
+                    partial = shlex.join(text[:len(cmd) + pos + 3])
+                    cursor = len(partial)
+
+                    raise ValidationError(
+                        message=message,
+                        cursor_position=cursor,
+                    )

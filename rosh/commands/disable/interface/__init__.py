@@ -11,7 +11,7 @@ class RoshDisableInterfaceCommand(RoshCommand):
     def __init__(self, rosh):
         super().__init__(rosh, link_completer, min_args=1)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         for link in self.rosh.ipr.link_lookup(ifname=args[0]):
             try:
                 self.handle_link(link)

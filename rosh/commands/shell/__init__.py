@@ -27,7 +27,7 @@ class RoshShellCommand(RoshSystemCommand):
 
         return env
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         if self.cmd == 'bash' or self.cmd.endswith('/bash'):
             super().handler(cmd, '--norc', *args)
         else:

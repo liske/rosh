@@ -9,7 +9,7 @@ class RoshNetnsCommand(RoshCommand):
     def __init__(self, rosh):
         super().__init__(rosh, netns_completer)
 
-    def handler(self, cmd, *args):
+    def handler(self, filters, cmd, *args):
         if len(args) == 0:
             self.rosh.ipr = IPRoute()
             return
