@@ -82,8 +82,6 @@ class Rosh():
             self.symbols = EXTENDED_SYMBOLS
 
         self.ipr = IPRoute()
-        from pprint import pprint
-        pprint(self.get_completers())
         self.session = PromptSession(self.ps1,
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
