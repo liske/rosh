@@ -2,6 +2,7 @@ from pyroute2 import netns
 
 from rosh.commands import RoshCommand
 from rosh.completer import netns_completer
+from rosh.filters import RoshFilter
 from rosh.output import RoshOutputTable
 
 class RoshShowNetnsCommand(RoshCommand):
@@ -15,7 +16,7 @@ class RoshShowNetnsCommand(RoshCommand):
         tbl.field_names = ['NetNS']
         tbl.align = 'l'
         tbl.sortby = 'NetNS'
-        tbl.add_rows([[x] for x in netns.listnetns()])
+        tbl.add_rows([[x] for x in netns.listnetns() if RoshFilter.filter_test_list(filters, [x])])
         print(tbl)
 
 
