@@ -1,5 +1,12 @@
 # ChangeLog
 
+## 0.1.7 - 2023-01-06
+
+Changes:
+- filters: add `include` and `exclude` output filters
+- show: add `show ifstate config` command
+- show: add various output filters support
+
 ## 0.1.6 - 2023-12-23
 
 Changes:
