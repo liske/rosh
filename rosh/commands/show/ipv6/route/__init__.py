@@ -4,6 +4,7 @@ from socket import AF_INET6
 
 from rosh.commands import RoshTuplesCommand
 from rosh.completer import link_completer, proto_completer, scope_completer, table_completer, RoshTuplesCompleter, RoshIpCompleter, RoshPfxCompleter
+from rosh.filters import RoshFilter
 from rosh.output import RoshOutputTable
 from rosh.rtlookup import protos, scopes
 
@@ -29,9 +30,9 @@ class RoshShowIpv6RouteCommand(RoshTuplesCommand):
 
         assert pos is None
 
-        self.dump_route(**kwargs)
+        self.dump_route(filters, **kwargs)
 
-    def dump_route(self, **filter):
+    def dump_route(self, prompt_filters, **filter):
         tbl = RoshOutputTable()
         tbl.field_names = ['dst', 'gw', 'oif', 'prio', 'pref', 'proto', 'scope', 'flags']
         tbl.align['dst'] = 'l'
@@ -45,7 +46,7 @@ class RoshShowIpv6RouteCommand(RoshTuplesCommand):
             except ValueError:
                 via = '-'
 
-            tbl.add_row([
+            row = [
                 str(ip_network(route.get_attr('RTA_DST', '::' if self.family == AF_INET6 else '0.0.0.0') + '/' + str(route['dst_len']))),
                 via,
                 self.rosh.idx_to_ifname(route.get_attr('RTA_OIF')),
@@ -54,7 +55,10 @@ class RoshShowIpv6RouteCommand(RoshTuplesCommand):
                 protos.lookup_str(route['proto']),
                 scopes.lookup_str(route['scope']),
                 route['flags']
-            ])
+            ]
+
+            if RoshFilter.filter_test_list(prompt_filters, row):
+                tbl.add_row(row)
         print(tbl)
 
 

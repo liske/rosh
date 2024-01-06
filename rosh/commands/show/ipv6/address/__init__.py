@@ -4,6 +4,7 @@ from socket import AF_INET6
 
 from rosh.commands import RoshTuplesCommand
 from rosh.completer import link_completer, RoshTuplesCompleter
+from rosh.filters import RoshFilter
 from rosh.lookup import ifa_flags
 from rosh.rtlookup import scopes
 from rosh.output import RoshOutputTable
@@ -26,9 +27,9 @@ class RoshShowIpv6AddressCommand(RoshTuplesCommand):
 
         assert pos is None
 
-        self.dump_addr(**kwargs)
+        self.dump_addr(filters, **kwargs)
 
-    def dump_addr(self, **filter):
+    def dump_addr(self, prompt_filters, **filter):
         tbl = RoshOutputTable()
         tbl.field_names = ['address', 'ifname', 'scope', 'flags']
         tbl.align['address'] = 'l'
@@ -36,12 +37,15 @@ class RoshShowIpv6AddressCommand(RoshTuplesCommand):
         tbl.sortby = 'address'
 
         for addr in self.rosh.ipr.get_addr(family=self.family, **filter):
-            tbl.add_row([
+            row = [
                 ip_interface(addr.get_attr('IFA_ADDRESS') + '/' + str(addr['prefixlen'])),
                 self.rosh.idx_to_ifname(addr['index']),
                 scopes.lookup_str(addr['scope']),
                 ifa_flags.lookup_str(addr['flags'])
-            ])
+            ]
+
+            if RoshFilter.filter_test_list(prompt_filters, row):
+                tbl.add_row(row)
         print(tbl)
 
 

@@ -3,6 +3,7 @@ from socket import AF_INET6
 
 from rosh.commands import RoshTuplesCommand
 from rosh.completer import link_completer, proto_completer, table_completer, RoshTuplesCompleter, RoshPfxCompleter
+from rosh.filters import RoshFilter
 from rosh.output import RoshOutputTable
 from rosh.rtlookup import protos, tables
 
@@ -39,9 +40,9 @@ class RoshShowIpv6RuleCommand(RoshTuplesCommand):
 
         assert pos is None
 
-        self.dump_rule(**kwargs)
+        self.dump_rule(filters, **kwargs)
 
-    def dump_rule(self, **filter):
+    def dump_rule(self, prompt_filters, **filter):
         tbl = RoshOutputTable()
         tbl.field_names = ['prio', 'from', 'to', 'iif', 'oif', 'fwmark', 'ip_proto', 'action', 'target', 'proto']
         tbl.align['from'] = 'l'
@@ -68,7 +69,7 @@ class RoshShowIpv6RuleCommand(RoshTuplesCommand):
             else:
                 src = 'all'
 
-            tbl.add_row([
+            row = [
                 rule.get_attr('FRA_PRIORITY', 0),
                 dst,
                 src,
@@ -79,7 +80,10 @@ class RoshShowIpv6RuleCommand(RoshTuplesCommand):
                 action,
                 target,
                 protos.lookup_str(rule.get('protocol', '-'))
-            ])
+            ]
+
+            if RoshFilter.filter_test_list(prompt_filters, row):
+                tbl.add_row(row)
         print(tbl)
 
 

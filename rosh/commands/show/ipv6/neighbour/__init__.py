@@ -2,6 +2,7 @@ from socket import AF_INET6
 
 from rosh.commands import RoshTuplesCommand
 from rosh.completer import link_completer, proto_completer, neighstate_completer, RoshIpCompleter, RoshTuplesCompleter
+from rosh.filters import RoshFilter
 from rosh.lookup import neigh_flags, neigh_states
 from rosh.output import RoshOutputTable
 
@@ -24,9 +25,9 @@ class RoshShowIpv6NeighbourCommand(RoshTuplesCommand):
 
         assert pos is None
 
-        self.dump_neigh(**kwargs)
+        self.dump_neigh(filters, **kwargs)
 
-    def dump_neigh(self, **filter):
+    def dump_neigh(self, prompt_filters, **filter):
         tbl = RoshOutputTable()
         tbl.field_names = ['dst', 'lladdr', 'ifname', 'flags', 'state']
         tbl.align['dst'] = 'l'
@@ -34,13 +35,16 @@ class RoshShowIpv6NeighbourCommand(RoshTuplesCommand):
         tbl.sortby = 'dst'
 
         for neigh in self.rosh.ipr.get_neighbours(family=self.family, **filter):
-            tbl.add_row([
+            row = [
                 neigh.get_attr('NDA_DST',''),
                 neigh.get_attr('NDA_LLADDR', '(incomplete)'),
                 self.rosh.idx_to_ifname(neigh['ifindex']),
                 neigh_flags.lookup_str(neigh['flags']) or '-',
                 neigh_states.lookup_str(neigh['state']) or '-'
-            ])
+            ]
+
+            if RoshFilter.filter_test_list(prompt_filters, row):
+                tbl.add_row(row)
         print(tbl)
 
 
