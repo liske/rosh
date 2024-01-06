@@ -181,8 +181,8 @@ class RoshShowInterfaceCommand(RoshCommand):
 
         self.output.print_dict(device)
 
-    def handler_ethtool(self, iface, cmd):
-        self.ethtool_command.handler(None, self.ethtool_args[cmd], iface)
+    def handler_ethtool(self, filters, iface, cmd):
+        self.ethtool_command.handler(None, filters, self.ethtool_args[cmd], iface)
 
     def validate(self, cmd, args):
         if len(args) > 2:

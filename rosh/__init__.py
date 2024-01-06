@@ -11,7 +11,7 @@ import platform
 from prompt_toolkit import PromptSession, print_formatted_text as print
 from prompt_toolkit.application.current import get_app_session
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.completion import NestedCompleter, WordCompleter
+from prompt_toolkit.completion import NestedCompleter, WordCompleter, DummyCompleter, merge_completers
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.shortcuts import set_title, CompleteStyle
 from prompt_toolkit.styles import Style
@@ -82,6 +82,8 @@ class Rosh():
             self.symbols = EXTENDED_SYMBOLS
 
         self.ipr = IPRoute()
+        from pprint import pprint
+        pprint(self.get_completers())
         self.session = PromptSession(self.ps1,
                     auto_suggest=AutoSuggestFromHistory(),
                     completer=NestedCompleter.from_nested_dict(self.get_completers()),
@@ -348,23 +350,50 @@ class Rosh():
                 ('', ' '),
             ])
 
-    def get_completers(self, commands=None):
+    def get_completers(self, commands=None, filter_completers=None):
         '''
         Extracts the completers from commands dict.
         '''
         if commands is None:
             commands = self.commands
 
+        if filter_completers is None:
+            filter_completers = NestedCompleter({
+                        '': DummyCompleter(),
+                        '|': self.get_filter_completers()
+            })
+
         d = {}
         for k, v in commands.items():
             if isinstance(v, RoshCommand):
-                d[k] = v.completer
+                c = v.completer
+                if c is None:
+                    d[k] = filter_completers
+                else:
+                    d[k] = c
             elif isinstance(v, dict):
-                d[k] = self.get_completers(v)
-            else:
-                d[k] = v
+                d[k] = self.get_completers(v, filter_completers)
 
         return d
+
+    def get_filter_completers(self):
+        '''
+        Extracts the completers from filters list.
+        '''
+
+        nc = NestedCompleter({})
+
+        d = {}
+        for k, v in self.filters.items():
+            d[k] = RoshPeerCompleter(
+                v.completer,
+                NestedCompleter({
+                    '': DummyCompleter(),
+                    '|': nc
+                }))
+        nc.options = d
+
+        return nc
 
     def find_commands(self, ns_pkg):
         '''

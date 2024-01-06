@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from prompt_toolkit.completion import DummyCompleter
 
 
 class RoshFilter(ABC):
@@ -8,7 +9,7 @@ class RoshFilter(ABC):
 
     min_args = 0
     max_args = None
-    completer = None
+    completer = DummyCompleter()
 
     @abstractmethod
     def __init__(self, rosh, cmd, *args):
