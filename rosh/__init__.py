@@ -61,6 +61,7 @@ class Rosh():
         set_title("rosh@{}".format(socket.getfqdn()))
 
         self.session = None
+        self.quit_callbacks = []
 
         # initialize default config
         self.config = configparser.ConfigParser()
@@ -233,6 +234,9 @@ class Rosh():
                 continue
 
             command.handler(filters, cmd_arg0, *cmd_args)
+
+        for cb in self.quit_callbacks:
+            cb()
 
     def dump_commands(self, filters=None):
         '''
@@ -572,6 +576,12 @@ class Rosh():
         self.cache_ifname_to_idx[ifname] = idx
 
         return idx
+
+    def register_quit_fn(self, cb):
+        '''
+        Register a callback function to be called before rosh terminates.
+        '''
+        self.quit_callbacks.append(cb)
 
 def main():
     # update proc title
