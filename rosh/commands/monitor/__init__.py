@@ -23,7 +23,7 @@ MONITOR_COMMANDS = [
 ]
 
 class RoshMonitor(RoshCommand):
-    description = 'monitor for network changes'
+    description = 'monitor for changes'
 
     def __init__(self, rosh):
         self.monitor_process = None

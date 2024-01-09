@@ -1,5 +1,13 @@
 # ChangeLog
 
+## 0.1.8 - 2023-01-09
+
+Changes:
+- commands: add monitor command
+
+Fixes:
+- commands: fix missing filters parameter in handler calls
+
 ## 0.1.7 - 2023-01-06
 
 Changes:
