@@ -27,6 +27,8 @@ ifstatecli         run ifstatecli command
   <apply|check|shell|show|showall>
 lbu                run lbu command
   <commit|ci|diff|exclude|include|list|ls|list-backup|lb|package|pkg|revert|status|st>
+monitor         monitor for changes
+  <all|none|address|interface|neigh|netconf|prefix|route|rule> {ifname}
 mtr                run mtr command
 netns              change active netns namespace for subsequent commands
   {netns}
