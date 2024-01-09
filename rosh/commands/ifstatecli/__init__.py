@@ -42,7 +42,7 @@ class RoshIfstateCommand(RoshSystemCommand):
         if self.rosh.config['command.ifstatecli'].getboolean('verbose'):
             config_args.append('-v')
 
-        super().handler(cmd, *config_args, *args)
+        super().handler(filters, cmd, *config_args, *args)
 
 
 is_rosh_command = ifstatecli_exe is not None

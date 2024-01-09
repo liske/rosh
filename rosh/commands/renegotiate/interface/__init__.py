@@ -20,7 +20,7 @@ class RoshRenegotiateInterfaceCommand(RoshSystemCommand):
         super().__init__(rosh, ethtool_exe, completer, min_args=1)
 
     def handler(self, filters, cmd, *args):
-        super().handler(cmd, '--negotiate', *args)
+        super().handler(filters, cmd, '--negotiate', *args)
 
 is_rosh_command = ethtool_exe is not None
 rosh_command = RoshRenegotiateInterfaceCommand
