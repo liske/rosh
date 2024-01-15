@@ -48,7 +48,7 @@ class RoshShowInterfaceCommand(RoshCommand):
         elif len(args) == 1:
             self.handler_iface(args[0])
         elif len(args) == 2:
-            self.handler_ethtool(args[0], args[1])
+            self.handler_ethtool(filters, args[0], args[1])
 
     def handler_brief(self, filters):
         tbl = RoshOutputTable()
